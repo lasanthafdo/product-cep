@@ -150,44 +150,12 @@
         <!--</excludes>-->
         <!--</fileSet>-->
 
-        <!--creating an empty input event adaptors directory-->
-        <fileSet>
-            <directory>.</directory>
-            <outputDirectory>
-                ${pom.artifactId}-${pom.version}/repository/deployment/server/inputeventadaptors
-            </outputDirectory>
-            <excludes>
-                <exclude>**/*</exclude>
-            </excludes>
-        </fileSet>
 
-        <!--creating an empty output event adaptors directory-->
+        <!--creating an empty domain template directory-->
         <fileSet>
             <directory>.</directory>
             <outputDirectory>
-                ${pom.artifactId}-${pom.version}/repository/deployment/server/outputeventadaptors
-            </outputDirectory>
-            <excludes>
-                <exclude>**/*</exclude>
-            </excludes>
-        </fileSet>
-
-        <!--creating an empty event builders directory-->
-        <fileSet>
-            <directory>.</directory>
-            <outputDirectory>
-                ${pom.artifactId}-${pom.version}/repository/deployment/server/eventbuilders
-            </outputDirectory>
-            <excludes>
-                <exclude>**/*</exclude>
-            </excludes>
-        </fileSet>
-
-        <!--creating an empty event formatters directory-->
-        <fileSet>
-            <directory>.</directory>
-            <outputDirectory>
-                ${pom.artifactId}-${pom.version}/repository/deployment/server/eventformatters
+                ${pom.artifactId}-${pom.version}/repository/conf/cep/domain-template
             </outputDirectory>
             <excludes>
                 <exclude>**/*</exclude>
@@ -286,6 +254,15 @@
             <outputDirectory>${pom.artifactId}-${pom.version}/client-lib</outputDirectory>
         </fileSet>
 
+        <!-- Dashboard -->
+        <fileSet>
+            <directory>repository/resources/designer</directory>
+            <outputDirectory>${pom.artifactId}-${pom.version}/repository/deployment/server/jaggeryapps/designer</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>target/shindig</directory>
+            <outputDirectory>${pom.artifactId}-${pom.version}/repository/deployment/server/webapps/shindig</outputDirectory>
+        </fileSet>
     </fileSets>
 
     <files>
@@ -574,7 +551,24 @@
             <filtered>true</filtered>
         </file>
 
+        <!--dashboard-->
+        <file>
+            <source>
+                ../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/conf/cep/rdbms-configuration.xml
+            </source>
+            <outputDirectory>${pom.artifactId}-${pom.version}/repository/conf/cep
+            </outputDirectory>
+            <filtered>true</filtered>
+        </file>
 
+        <!--Copying sample domain template file -->
+        <file>
+            <source>
+                repository/conf/domain-template/temperature-analysis.xml
+            </source>
+            <outputDirectory>${pom.artifactId}-${pom.version}/repository/conf/cep/domain-template</outputDirectory>
+            <filtered>true</filtered>
+        </file>
     </files>
 
     <!-- Adding rampart mar -->

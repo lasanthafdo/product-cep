@@ -16,44 +16,46 @@
 
 package org.wso2.carbon.sample.tfl;
 
-import org.wso2.carbon.sample.tfl.Bus.BusStream;
-import org.wso2.carbon.sample.tfl.BusStop.BusStop;
-import org.wso2.carbon.sample.tfl.Traffic.DisruptionStream;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.wso2.carbon.sample.tfl.bus.BusStream;
+import org.wso2.carbon.sample.tfl.busstop.BusStop;
+import org.wso2.carbon.sample.tfl.traffic.StreamPollingTask;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class GetData extends Thread {
+public class DataPoller extends Thread {
 
     public static final String RecordedBusStopURL = "http://localhost/TFL/stop.txt";
     public static final String RecordedTrafficURL = "http://localhost/TFL/tims_feed.xml";
     public static final String RecordedBusURL = "http://localhost/TFL/data";
 
     public static final String LiveTrafficURL = "https://data.tfl.gov.uk/tfl/syndication/feeds/tims_feed.xml";
-    public static final String LiveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=61,62,63,64,65,66&ReturnList=StopID,Latitude,Longitude";
-    public static final String LiveBusURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=61,62,63,64,65,66&ReturnList=StopID,LineID,VehicleID,EstimatedTime";
+    public static final String LiveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?ReturnList=StopID,Latitude,Longitude";
+    public static final String LiveBusURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?ReturnList=StopID,LineID,VehicleID,EstimatedTime";
 
     public static String TrafficURL;
     public static String BusURL;
     public static String BusStopURL;
 
-    private boolean isbus;
+    private static Log log = LogFactory.getLog(DataPoller.class);
 
-    public GetData(boolean isbus, boolean playback) {
+    private boolean isBus;
+
+    public DataPoller(boolean isBus, boolean playback) {
         super();
-        this.isbus = isbus;
+        this.isBus = isBus;
 
-        if(playback){
+        if (playback) {
             TrafficURL = RecordedTrafficURL;
             BusURL = RecordedBusURL;
             BusStopURL = RecordedBusStopURL;
-        }else{
+        } else {
             TrafficURL = LiveTrafficURL;
             BusURL = LiveBusURL;
             BusStopURL = LiveBusStopURL;
@@ -62,11 +64,10 @@ public class GetData extends Thread {
 
     public void run() {
 
-        if(isbus){
+        if (isBus) {
             getStops();
             getBus();
-        }
-        else {
+        } else {
             getDisruptions();
         }
 
@@ -76,90 +77,91 @@ public class GetData extends Thread {
         BusStream b;
         long time = System.currentTimeMillis();
         int i = 0;
-        while (true){
-            //System.out.println("Getting Data");
+        while (true) {
             String url = BusURL;
             if (BusURL.contains("localhost"))
                 url += i + ".txt";
-            System.out.println(url);
+            log.info(url);
             b = new BusStream(url);
             b.start();
             try {
                 time += 30000;
                 Thread.sleep(time - System.currentTimeMillis());
             } catch (InterruptedException e) {
+                //ignore
             }
 
-            i = (i+1) % 100;
+            i = (i + 1) % 100;
         }
 
     }
 
     private static void getDisruptions() {
-        DisruptionStream ds;
+        StreamPollingTask ds;
         long time = System.currentTimeMillis();
 
-        while(true){
-            ds = new DisruptionStream(TrafficURL);
-            //System.out.println("Getting Disruption Data ");
+        while (true) {
+            ds = new StreamPollingTask(TrafficURL);
+            log.info("Getting Disruption Data ");
             ds.start();
-            try{
+            try {
                 time += 300000;
                 Thread.sleep(time - System.currentTimeMillis());
-            }catch(InterruptedException e){
+            } catch (InterruptedException e) {
+                //ignore
             }
         }
 
     }
 
     private static void getStops() {
+        HttpURLConnection con = null;
+        BufferedReader in = null;
         try {
             String[] arr;
 
             URL obj = new URL(BusStopURL);
-            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con = (HttpURLConnection) obj.openConnection();
 
             // optional default is GET
             con.setRequestMethod("GET");
 
             int responseCode = con.getResponseCode();
-            System.out.println("\nSending 'GET' request to URL : " + BusStopURL);
-            System.out.println("Response Code : " + responseCode);
+            log.info("\nSending 'GET' request to URL : " + BusStopURL);
+            log.info("Response Code : " + responseCode);
 
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
 
             long time = System.currentTimeMillis();
-            //System.out.println(time);
             inputLine = in.readLine();
             inputLine = inputLine.replaceAll("[\\[\\]\"]", "");
             arr = inputLine.split(",");
             TflStream.timeOffset = time - Long.parseLong(arr[2]);
 
-
             ArrayList<String> stopJsonList = new ArrayList<String>();
-
             while ((inputLine = in.readLine()) != null) {
                 inputLine = inputLine.replaceAll("[\\[\\]\"]", "");
                 arr = inputLine.split(",");
-                //System.out.println(Double.parseDouble(arr[3]));
-                //System.out.println(Double.parseDouble(arr[2]));
                 BusStop temp = new BusStop(arr[1], Double.parseDouble(arr[2]),
                         Double.parseDouble(arr[3]));
-                //System.out.println(temp);
                 TflStream.map.put(arr[1], temp);
                 stopJsonList.add(temp.toString());
             }
-            TflStream.send(stopJsonList, TflStream.endPointBus);
-            in.close();
-            con.disconnect();
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (ProtocolException e) {
-            e.printStackTrace();
+            TflStream.appendToFile("tfl-bus-stop-data.out", stopJsonList);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("IOException while reading bus stop data: " + e.getMessage(), e);
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+                if (con != null) {
+                    con.disconnect();
+                }
+            } catch (IOException e) {
+                log.error("Error while closing stream: " + e.getMessage(), e);
+            }
         }
     }
 

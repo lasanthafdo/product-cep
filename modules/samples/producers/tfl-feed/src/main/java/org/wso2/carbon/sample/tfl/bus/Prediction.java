@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.Bus;
+package org.wso2.carbon.sample.tfl.bus;
 
-import org.wso2.carbon.sample.tfl.BusStop.BusStop;
+import org.wso2.carbon.sample.tfl.busstop.BusStop;
 
 public class Prediction implements Comparable<Prediction> {
 	public BusStop busStop;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.BusStop;
+package org.wso2.carbon.sample.tfl.busstop;
 
 public class BusStop {
 	public String id;

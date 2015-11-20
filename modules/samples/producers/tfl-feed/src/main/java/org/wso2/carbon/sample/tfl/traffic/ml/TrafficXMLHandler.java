@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.Traffic;
+package org.wso2.carbon.sample.tfl.traffic.ml;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -39,6 +39,7 @@ public class TrafficXMLHandler extends DefaultHandler {
     }
 
     public void startDocument() throws SAXException {
+       // System.out.println("Started parsing");
     }
 
     public void startElement(String uri, String localName,
@@ -47,10 +48,6 @@ public class TrafficXMLHandler extends DefaultHandler {
         startElement = true;
         if (qName.equals("Disruption")) {
             //System.out.println("disruption");
-            if (current != null) {
-                current.end();
-                list.add(current);
-            }
             current = new Disruption();
             current.id = atts.getValue(0);
         } else if (qName.equals("Line")) {
@@ -62,6 +59,14 @@ public class TrafficXMLHandler extends DefaultHandler {
 
     public void endElement(String uri, String localName,
                            String qName) throws SAXException {
+        if (qName.equals("Disruption")) {
+            try {
+                current.end();
+                list.add(current);
+            } catch (Exception e) {
+                //System.out.println(current.coords.size());
+            }
+        }
         String string = sb.toString();
         if (qName.equals("severity")) {
             current.setSeverity(string);

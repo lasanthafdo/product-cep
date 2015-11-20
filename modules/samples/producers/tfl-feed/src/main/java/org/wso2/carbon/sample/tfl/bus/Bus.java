@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.Bus;
+package org.wso2.carbon.sample.tfl.bus;
 
-import org.wso2.carbon.sample.tfl.BusStop.BusStop;
 import org.wso2.carbon.sample.tfl.TflStream;
+import org.wso2.carbon.sample.tfl.busstop.BusStop;
 
 import java.util.HashMap;
 import java.util.PriorityQueue;

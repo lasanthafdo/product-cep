@@ -14,54 +14,44 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.Traffic;
+package org.wso2.carbon.sample.tfl.traffic;
 
-import org.wso2.carbon.sample.tfl.Bus.Bus;
-import org.wso2.carbon.sample.tfl.BusStop.BusStop;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.sample.tfl.TflStream;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 
-/**
- * Created by isuru on 2/9/15.
- */
-public class DisruptionStream extends Thread {
-    String TrafficURL;
+public class StreamPollingTask extends Thread {
+    private static Log log = LogFactory.getLog(StreamPollingTask.class);
 
-    public DisruptionStream(String url) {
+    private String streamURL;
+
+    public StreamPollingTask(String url) {
         super();
-        this.TrafficURL = url;
+        this.streamURL = url;
     }
 
     public void run() {
         try {
-            URL obj = new URL(TrafficURL);
+            URL obj = new URL(streamURL);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-            // optional default is GET
-            con.setRequestMethod("GET");
-
-            int responseCode = con.getResponseCode();
-            System.out.println("\nSending 'GET' request to URL : " + TrafficURL);
-            System.out.println("Response Code : " + responseCode);
-
-            //BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-
             ArrayList<Disruption> disruptionsList = new ArrayList<Disruption>();
             try {
+                // optional default is GET
+                con.setRequestMethod("GET");
+                int responseCode = con.getResponseCode();
+                log.info("\nSending 'GET' request to URL : " + streamURL);
+                log.info("Response Code : " + responseCode);
+
                 double t = System.currentTimeMillis();
-                //System.out.println("TrafficStream");
                 // Get SAX Parser Factory
                 SAXParserFactory factory = SAXParserFactory.newInstance();
                 // Turn on validation, and turn off namespaces
@@ -69,39 +59,30 @@ public class DisruptionStream extends Thread {
                 factory.setNamespaceAware(false);
                 SAXParser parser = factory.newSAXParser();
                 parser.parse(con.getInputStream(), new TrafficXMLHandler(disruptionsList));
-                System.out.println("Number of Disruptions added to the list: " + disruptionsList.size());
-                System.out.println("Time taken for parsing: " + (System.currentTimeMillis() - t));
+                log.info("Number of Disruptions added to the list: " + disruptionsList.size());
+                log.info("Time taken for parsing: " + (System.currentTimeMillis() - t));
             } catch (ParserConfigurationException e) {
-                System.out.println("The underlying parser does not support " +
+                log.info("The underlying parser does not support " +
                         " the requested features.");
             } catch (FactoryConfigurationError e) {
-                System.out.println("Error occurred obtaining SAX Parser Factory.");
+                log.info("Error occurred obtaining SAX Parser Factory.");
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                con.disconnect();
             }
-            con.disconnect();
 
-            //System.out.println(disruptionsList.get(0));
             ArrayList<String> list = new ArrayList<String>();
             int count = 0;
             for (Disruption disruption : disruptionsList) {
-                if (!disruption.isMultiPolygon)
-                    System.out.println(disruption.toString());
-                if(disruption.state.contains("Active")) {
-                //list.add(disruption.toStringSeverityMinimal());
-                list.add(disruption.toString());
+                if (disruption.state.contains("Active")) {
+                    list.add(disruption.toString());
                 }
                 count++;
             }
-            //System.out.println(list.get(0));
-            TflStream.send(list, TflStream.endPointTraffic);
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (ProtocolException e) {
-            e.printStackTrace();
+            TflStream.appendToFile("tfl-traffic-data.out", list);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Error occurred while getting traffic data: " + e.getMessage(), e);
         }
 
     }

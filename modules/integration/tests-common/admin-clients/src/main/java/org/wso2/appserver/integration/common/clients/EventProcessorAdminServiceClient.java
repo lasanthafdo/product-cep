@@ -1,20 +1,19 @@
 /*
  * Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package org.wso2.appserver.integration.common.clients;
 
 import org.apache.axis2.AxisFault;
@@ -24,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.event.processor.stub.EventProcessorAdminServiceStub;
 import org.wso2.carbon.event.processor.stub.types.ExecutionPlanConfigurationDto;
 import org.wso2.carbon.event.processor.stub.types.ExecutionPlanConfigurationFileDto;
+import org.wso2.carbon.event.processor.stub.types.StreamDefinitionDto;
 
 import java.rmi.RemoteException;
 
@@ -34,7 +34,7 @@ public class EventProcessorAdminServiceClient {
     private String endPoint;
 
     public EventProcessorAdminServiceClient(String backEndUrl, String sessionCookie) throws
-                                                                                     AxisFault {
+            AxisFault {
         this.endPoint = backEndUrl + serviceName;
         eventProcessorAdminServiceStub = new EventProcessorAdminServiceStub(endPoint);
         AuthenticateStubUtil.authenticateStub(sessionCookie, eventProcessorAdminServiceStub);
@@ -52,7 +52,7 @@ public class EventProcessorAdminServiceClient {
         return eventProcessorAdminServiceStub._getServiceClient();
     }
 
-    public int getAllActiveExecutionPlanConfigurationCount()
+    public int getActiveExecutionPlanConfigurationCount()
             throws RemoteException {
         try {
             ExecutionPlanConfigurationDto[] configs = eventProcessorAdminServiceStub.getAllActiveExecutionPlanConfigurations();
@@ -63,7 +63,22 @@ public class EventProcessorAdminServiceClient {
             }
         } catch (RemoteException e) {
             log.error("RemoteException", e);
-            throw new RemoteException();
+            throw e;
+        }
+    }
+
+    public int getInactiveExecutionPlanConfigurationCount()
+            throws RemoteException {
+        try {
+            ExecutionPlanConfigurationFileDto[] configs = eventProcessorAdminServiceStub.getAllInactiveExecutionPlanConigurations();
+            if (configs == null) {
+                return 0;
+            } else {
+                return configs.length;
+            }
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw e;
         }
     }
 
@@ -72,13 +87,23 @@ public class EventProcessorAdminServiceClient {
         try {
             ExecutionPlanConfigurationFileDto[] configs = eventProcessorAdminServiceStub.getAllInactiveExecutionPlanConigurations();
             if (configs == null) {
-                return getAllActiveExecutionPlanConfigurationCount();
+                return getActiveExecutionPlanConfigurationCount();
             } else {
-                return configs.length + getAllActiveExecutionPlanConfigurationCount();
+                return configs.length + getActiveExecutionPlanConfigurationCount();
             }
         } catch (RemoteException e) {
             log.error("RemoteException", e);
-            throw new RemoteException();
+            throw e;
+        }
+    }
+
+    public ExecutionPlanConfigurationDto getActiveExecutionPlanConfiguration(String executionPlanName)
+            throws RemoteException {
+        try {
+            return eventProcessorAdminServiceStub.getActiveExecutionPlanConfiguration(executionPlanName);
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw e;
         }
     }
 
@@ -88,7 +113,7 @@ public class EventProcessorAdminServiceClient {
             eventProcessorAdminServiceStub.deployExecutionPlan(executionPlan);
         } catch (RemoteException e) {
             log.error("RemoteException", e);
-            throw new RemoteException(e.getMessage(),e);
+            throw e;
         }
     }
 
@@ -98,7 +123,7 @@ public class EventProcessorAdminServiceClient {
             eventProcessorAdminServiceStub.undeployActiveExecutionPlan(planName);
         } catch (RemoteException e) {
             log.error("RemoteException", e);
-            throw new RemoteException();
+            throw e;
         }
     }
 
@@ -108,7 +133,64 @@ public class EventProcessorAdminServiceClient {
             eventProcessorAdminServiceStub.undeployInactiveExecutionPlan(filePath);
         } catch (RemoteException e) {
             log.error("RemoteException", e);
-            throw new RemoteException();
+            throw e;
+        }
+    }
+
+    public void editActiveExecutionPlan(String executionPlan, String executionPlanName)
+            throws RemoteException {
+        try {
+            eventProcessorAdminServiceStub.editActiveExecutionPlan(executionPlan, executionPlanName);
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw e;
+        }
+    }
+
+    public String validateExecutionPlan(String executionPlan) throws RemoteException {
+        try {
+            return eventProcessorAdminServiceStub.validateExecutionPlan(executionPlan);
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw e;
+        }
+
+    }
+
+    public void setStatisticsEnabled(String executionPlanName, boolean isEnabled) throws RemoteException {
+        try {
+            eventProcessorAdminServiceStub.setStatisticsEnabled(executionPlanName, isEnabled);
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw e;
+        }
+    }
+
+    public void setTracingEnabled(String executionPlanName, boolean isEnabled) throws RemoteException {
+        try {
+            eventProcessorAdminServiceStub.setTracingEnabled(executionPlanName, isEnabled);
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw e;
+        }
+    }
+
+    public StreamDefinitionDto[] getSiddhiStreams(String executionPlan) throws RemoteException {
+        try {
+            return eventProcessorAdminServiceStub.getSiddhiStreams(executionPlan);
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw e;
+        }
+    }
+
+    public ExecutionPlanConfigurationDto[] getAllExportedStreamSpecificActiveExecutionPlanConfiguration(
+            String streamId) throws RemoteException {
+        try {
+            return eventProcessorAdminServiceStub.getAllExportedStreamSpecificActiveExecutionPlanConfiguration(streamId);
+        } catch (RemoteException e) {
+            log.error("RemoteException", e);
+            throw e;
         }
     }
 }

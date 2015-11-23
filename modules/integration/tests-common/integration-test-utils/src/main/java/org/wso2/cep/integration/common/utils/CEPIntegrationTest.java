@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.wso2.cep.integration.common.utils;
@@ -36,6 +34,10 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.rmi.RemoteException;
 import java.util.regex.Matcher;
 
 public abstract class CEPIntegrationTest {
@@ -50,6 +52,10 @@ public abstract class CEPIntegrationTest {
     protected EventPublisherAdminServiceClient eventPublisherAdminServiceClient;
 
     protected ExecutionManagerAdminServiceClient executionManagerAdminServiceClient;
+    protected EventSimulatorAdminServiceClient eventSimulatorAdminServiceClient;
+
+    private final String artifactDeploymentDir = FrameworkPathUtil.getCarbonHome() + File.separator + "repository" +
+                                                 File.separator + "deployment" + File.separator + "server" + File.separator;
 
     protected void init() throws Exception {
         init(TestUserMode.SUPER_TENANT_ADMIN);
@@ -69,6 +75,7 @@ public abstract class CEPIntegrationTest {
     protected void cleanup() {
         cepServer = null;
         configurationUtil = null;
+        cleanupArtifacts();
     }
 
     protected String getServiceUrl(String serviceName) throws XPathExpressionException {
@@ -90,13 +97,14 @@ public abstract class CEPIntegrationTest {
 
     /**
      * @param testCaseFolderName Name of the folder created under /artifacts/CEP for the particular test case.
-     * @param configFileName Name of the XML config-file created under above folder.
+     * @param configFileName     Name of the XML config-file created under above folder.
      * @return The above XML-configuration, as a string
      * @throws Exception
      */
     protected String getXMLArtifactConfiguration(String testCaseFolderName, String configFileName)
             throws Exception {
-        String relativeFilePath = getTestArtifactLocation() + "/artifacts/CEP/"+testCaseFolderName+"/"+configFileName;
+        String relativeFilePath = getTestArtifactLocation() + CEPIntegrationTestConstants.RELATIVE_PATH_TO_TEST_ARTIFACTS + testCaseFolderName + "/"
+                                  + configFileName;
         relativeFilePath = relativeFilePath.replaceAll("[\\\\/]", Matcher.quoteReplacement(File.separator));
         OMElement configElement = loadClasspathResourceXML(relativeFilePath);
         return configElement.toString();
@@ -104,13 +112,13 @@ public abstract class CEPIntegrationTest {
 
     /**
      * @param testCaseFolderName testCaseFolderName Name of the folder created under /artifacts/CEP for the particular test case.
-     * @param configFileName Name of the JSON config-file created under above folder.
+     * @param configFileName     Name of the JSON config-file created under above folder.
      * @return The above JSON-configuration, as a string
      * @throws Exception
      */
     protected String getJSONArtifactConfiguration(String testCaseFolderName, String configFileName)
             throws Exception {
-        String relativeFilePath = getTestArtifactLocation() + "/artifacts/CEP/"+testCaseFolderName+"/"+configFileName;
+        String relativeFilePath = getTestArtifactLocation() + CEPIntegrationTestConstants.RELATIVE_PATH_TO_TEST_ARTIFACTS + testCaseFolderName + "/" + configFileName;
         relativeFilePath = relativeFilePath.replaceAll("[\\\\/]", Matcher.quoteReplacement(File.separator));
         JSONParser jsonParser = new JSONParser();
         return jsonParser.parse(new FileReader(relativeFilePath)).toString();
@@ -118,16 +126,17 @@ public abstract class CEPIntegrationTest {
 
     /**
      * Returns the execution plan, read from the given file path.
-     * @param testCaseFolderName testCaseFolderName Name of the folder created under /artifacts/CEP for the particular test case.
+     *
+     * @param testCaseFolderName    testCaseFolderName Name of the folder created under /artifacts/CEP for the particular test case.
      * @param executionPlanFileName Execution plan file name, relative to the test artifacts folder.
      * @return execution plan as a string.
      * @throws Exception
      */
     protected String getExecutionPlanFromFile(String testCaseFolderName, String executionPlanFileName)
             throws Exception {
-        String relativeFilePath = getTestArtifactLocation() + "/artifacts/CEP/"+testCaseFolderName+"/"+executionPlanFileName;
+        String relativeFilePath = getTestArtifactLocation() + CEPIntegrationTestConstants.RELATIVE_PATH_TO_TEST_ARTIFACTS + testCaseFolderName + "/" + executionPlanFileName;
         relativeFilePath = relativeFilePath.replaceAll("[\\\\/]", Matcher.quoteReplacement(File.separator));
-        return ConfigurationUtil.readFile(relativeFilePath) ;
+        return ConfigurationUtil.readFile(relativeFilePath);
     }
 
     public OMElement loadClasspathResourceXML(String path) throws FileNotFoundException, XMLStreamException {
@@ -167,5 +176,57 @@ public abstract class CEPIntegrationTest {
             throw new FileNotFoundException("File does not exist at " + path);
         }
         return documentElement;
+    }
+
+    protected void cleanupArtifacts() {
+
+        File artifactDirectory = new File(artifactDeploymentDir + "eventstreams");
+        File[] fileList = artifactDirectory.listFiles();
+        if (artifactDirectory.exists() && artifactDirectory.isDirectory() && fileList != null) {
+            for (File file : fileList) {
+                String[] eventStreamDetails = file.getName().split("_");
+                try {
+                    eventStreamManagerAdminServiceClient.removeEventStream(eventStreamDetails[0], eventStreamDetails[1].replace(".json",""));
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        artifactDirectory = new File(artifactDeploymentDir + "eventreceivers");
+        fileList = artifactDirectory.listFiles();
+        if (artifactDirectory.exists() && artifactDirectory.isDirectory() && fileList != null) {
+            for (File file : fileList) {
+                try {
+                    eventReceiverAdminServiceClient.removeInactiveEventReceiverConfiguration(file.getName());
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        artifactDirectory = new File(artifactDeploymentDir + "eventpublishers");
+        fileList = artifactDirectory.listFiles();
+        if (artifactDirectory.exists() && artifactDirectory.isDirectory() && fileList != null) {
+            for (File file : fileList) {
+                try {
+                    eventPublisherAdminServiceClient.removeInactiveEventPublisherConfiguration(file.getName());
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        artifactDirectory = new File(artifactDeploymentDir + "executionplans");
+        fileList = artifactDirectory.listFiles();
+        if (artifactDirectory.exists() && artifactDirectory.isDirectory() && fileList != null) {
+            for (File file : fileList) {
+                try {
+                    eventProcessorAdminServiceClient.removeInactiveExecutionPlan(file.getName());
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

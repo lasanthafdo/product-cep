@@ -1,21 +1,18 @@
 #!/bin/sh
 # ----------------------------------------------------------------------------
-# Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#  Copyright 2005-2015 WSO2, Inc. http://www.wso2.org
 #
-# WSO2 Inc. licenses this file to you under the Apache License,
-# Version 2.0 (the "License"); you may not use this file except
-# in compliance with the License.
-# You may obtain a copy of the License at
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing,
-# software distributed under the License is distributed on an
-# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-# KIND, either express or implied.  See the License for the
-# specific language governing permissions and limitations
-# under the License.
-#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 
 # ----------------------------------------------------------------------------
 # Main Script for the WSO2 Carbon Server
@@ -177,14 +174,14 @@ if [ "$CMD" = "--debug" ]; then
   echo "Please start the remote debugging client to continue..."
 elif [ "$CMD" = "start" ]; then
   if [ -e "$CARBON_HOME/wso2carbon.pid" ]; then
-    if  ps -p $PID >&- ; then
+    if  ps -p $PID > /dev/null ; then
       echo "Process is already running"
       exit 0
     fi
   fi
   export CARBON_HOME=$CARBON_HOME
-# using nohup bash to avoid erros in solaris OS.TODO
-  nohup bash $CARBON_HOME/bin/wso2server.sh $args > /dev/null 2>&1 &
+# using nohup sh to avoid erros in solaris OS.TODO
+  nohup sh $CARBON_HOME/bin/wso2server.sh $args > /dev/null 2>&1 &
   exit 0
 elif [ "$CMD" = "stop" ]; then
   export CARBON_HOME=$CARBON_HOME
@@ -202,8 +199,8 @@ elif [ "$CMD" = "restart" ]; then
         process_status=$?
   done
 
-# using nohup bash to avoid erros in solaris OS.TODO
-  nohup bash $CARBON_HOME/bin/wso2server.sh $args > /dev/null 2>&1 &
+# using nohup sh to avoid erros in solaris OS.TODO
+  nohup sh $CARBON_HOME/bin/wso2server.sh $args > /dev/null 2>&1 &
   exit 0
 elif [ "$CMD" = "test" ]; then
     JAVACMD="exec "$JAVACMD""
@@ -214,10 +211,10 @@ elif [ "$CMD" = "version" ]; then
 fi
 
 # ---------- Handle the SSL Issue with proper JDK version --------------------
-jdk_16=`$JAVA_HOME/bin/java -version 2>&1 | grep "1.[6|7]"`
-if [ "$jdk_16" = "" ]; then
+jdk_17=`$JAVA_HOME/bin/java -version 2>&1 | grep "1.[7|8]"`
+if [ "$jdk_17" = "" ]; then
    echo " Starting WSO2 Carbon (in unsupported JDK)"
-   echo " [ERROR] CARBON is supported only on JDK 1.6 and 1.7"
+   echo " [ERROR] CARBON is supported only on JDK 1.7 and 1.8"
 fi
 
 CARBON_XBOOTCLASSPATH=""
@@ -262,6 +259,11 @@ echo CARBON_HOME environment variable is set to $CARBON_HOME
 
 cd "$CARBON_HOME"
 
+TMP_DIR=$CARBON_HOME/tmp
+if [ -d "$TMP_DIR" ]; then
+rm -rf "$TMP_DIR"
+fi
+
 START_EXIT_STATUS=121
 status=$START_EXIT_STATUS
 
@@ -292,14 +294,17 @@ do
     -Dconf.location="$CARBON_HOME/repository/conf"\
     -Dcom.atomikos.icatch.file="$CARBON_HOME/lib/transactions.properties" \
     -Dcom.atomikos.icatch.hide_init_file_path=true \
+    -Dorg.apache.jasper.compiler.Parser.STRICT_QUOTE_ESCAPING=false \
     -Dorg.apache.jasper.runtime.BodyContentImpl.LIMIT_BUFFER=true \
     -Dcom.sun.jndi.ldap.connect.pool.authentication=simple  \
     -Dcom.sun.jndi.ldap.connect.pool.timeout=3000  \
     -Dorg.terracotta.quartz.skipUpdateCheck=true \
-    -Dorg.apache.jasper.compiler.Parser.STRICT_QUOTE_ESCAPING=false \
     -Djava.security.egd=file:/dev/./urandom \
     -Dfile.encoding=UTF8 \
-    -Dnet.sf.ehcache.pool.sizeof.AgentSizeOf.bypass=true \
+    -Djava.net.preferIPv4Stack=true \
+    -Dcom.ibm.cacheLocalHost=true \
+    -DworkerNode=false \
+    -Dtenant.idle.time=153722867280912 \
     org.wso2.carbon.bootstrap.Bootstrap $*
     status=$?
 done

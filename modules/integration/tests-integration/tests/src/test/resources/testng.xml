@@ -1,19 +1,17 @@
 <!--
   ~ Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
   ~
-  ~ WSO2 Inc. licenses this file to you under the Apache License,
-  ~ Version 2.0 (the "License"); you may not use this file except
-  ~ in compliance with the License.
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
   ~ You may obtain a copy of the License at
   ~
-  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~     http://www.apache.org/licenses/LICENSE-2.0
   ~
-  ~ Unless required by applicable law or agreed to in writing,
-  ~ software distributed under the License is distributed on an
-  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-  ~ KIND, either express or implied.  See the License for the
-  ~ specific language governing permissions and limitations
-  ~ under the License.
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
   -->
 
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
@@ -23,8 +21,8 @@
 
     <test name="cep-tests" preserve-order="true" parallel="false">
         <!--<packages>-->
-            <!--<package name="org.wso2.carbon.integration.test.services.*"/>-->
-            <!--<package name="org.wso2.carbon.integration.test.processflow.*"/>-->
+        <!--<package name="org.wso2.carbon.integration.test.services.*"/>-->
+        <!--<package name="org.wso2.carbon.integration.test.processflow.*"/>-->
         <!--</packages>-->
 
         <classes>
@@ -39,12 +37,45 @@
             <class name="org.wso2.carbon.integration.test.processflow.DeployArtifactsViaAPITestCase"/>
             <class name="org.wso2.carbon.integration.test.processflow.DeployArtifactsTestCase"/>
             <class name="org.wso2.carbon.integration.test.processflow.Wso2EventTestCase"/>
+            <class name="org.wso2.carbon.integration.test.processflow.AttributeEncryptTestCase"/>
             <class name="org.wso2.carbon.integration.test.inputflow.HttpTestCase"/>
+            <class name="org.wso2.carbon.integration.test.inputflow.WebsocketTestCase"/>
+            <class name="org.wso2.carbon.integration.test.inputflow.SOAPTestCase"/>
+            <class name="org.wso2.carbon.integration.test.inputflow.FileTestCase"/>
+            <class name="org.wso2.carbon.integration.test.inputflow.Wso2EventTestCase"/>
+            <!--<class name="org.wso2.carbon.integration.test.outputflow.LoggerTestCase"/>-->
+            <class name="org.wso2.carbon.integration.test.outputflow.RDBMSTestCase"/>
+            <class name="org.wso2.carbon.integration.test.outputflow.WebsocketTestCase"/>
+            <class name="org.wso2.carbon.integration.test.outputflow.SOAPTestCase"/>
+            <class name="org.wso2.carbon.integration.test.outputflow.HTTPTestCase"/>
+            <class name="org.wso2.carbon.integration.test.outputflow.UIAdapterTestCase"/>
+            <class name="org.wso2.carbon.integration.test.outputflow.Wso2EventTestCase"/>
             <!--<class name="org.wso2.carbon.integration.test.processflow.PassThroughWithWso2Event"/>-->
             <!--<class name="org.wso2.carbon.integration.test.processflow.MQTTXMLMessageTestCase"/>-->
             <!--<class name="org.wso2.carbon.integration.test.storm.StormTestCase"/>-->
             <class name="org.wso2.carbon.integration.test.execution.manager.ExecutionManagerTestCase"/>
             <!--<class name="org.wso2.carbon.integration.test.inputflow.MQTTTestCase"/>-->
+            <class name="org.wso2.carbon.integration.test.capp.CappTestCase"/>
+            <class name="org.wso2.carbon.integration.test.extensionflow.RDBMSEventTableTestCase"/>
+            <class name="org.wso2.carbon.integration.test.extensionflow.TimeExtensionTestCase"/>
+            <class name="org.wso2.carbon.integration.test.extensionflow.RegexTestCase"/>
+            <class name="org.wso2.carbon.integration.test.extensionflow.StringExtensionTestCase"/>
+            <class name="org.wso2.carbon.integration.test.extensionflow.MathExtensionTestCase"/>
+            <class name="org.wso2.carbon.integration.test.extensionflow.TimeSeriesExtensionTestCase"/>
+            <class name="org.wso2.carbon.integration.test.extensionflow.GeoExtensionTestCase"/>
+            <class name="org.wso2.carbon.integration.test.extensionflow.EvalScriptExtensionTestCase"/>
+
+            <!--added jms together to reduce server restart-->
+            <class name="org.wso2.carbon.integration.test.inputflow.JMSTestCase"/>
+            <class name="org.wso2.carbon.integration.test.outputflow.JMSTestCase"/>
+
+            <class name="org.wso2.carbon.integration.test.storm.StormManagerServiceTestCase"/>
+
+            <class name="org.wso2.carbon.integration.test.admin.EventReceiverAdminServiceTestCase"/>
+            <!--Event processor admin service test case -->
+            <class name="org.wso2.carbon.integration.test.admin.EventProcessorAdminServiceTestCase"/>
+            <class name="org.wso2.carbon.integration.test.admin.EventPublisherAdminServiceTestCase"/>
+            <class name="org.wso2.carbon.integration.test.admin.EventSimulatorAdminServiceTestCase"/>
         </classes>
 
     </test>

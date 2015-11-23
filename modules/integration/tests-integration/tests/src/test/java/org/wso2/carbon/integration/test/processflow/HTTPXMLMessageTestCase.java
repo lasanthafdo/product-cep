@@ -1,19 +1,17 @@
 /*
  * Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
- * WSO2 Inc. licenses this file to you under the Apache License,
- * Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.wso2.carbon.integration.test.processflow;
@@ -31,16 +29,17 @@ import org.wso2.carbon.integration.common.utils.LoginLogoutClient;
 import org.wso2.carbon.integration.common.utils.mgt.ServerConfigurationManager;
 import org.wso2.carbon.integration.test.client.PizzaOrderClient;
 import org.wso2.cep.integration.common.utils.CEPIntegrationTest;
+import org.wso2.cep.integration.common.utils.CEPIntegrationTestConstants;
 
 import java.io.File;
 import java.rmi.RemoteException;
 
-public class HTTPXMLMessageTestCase extends CEPIntegrationTest{
+public class HTTPXMLMessageTestCase extends CEPIntegrationTest {
 
     private static final Log log = LogFactory.getLog(HTTPXMLMessageTestCase.class);
     private ServerConfigurationManager serverManager = null;
     protected final String webAppFileName = "GenericLogService.war";
-
+    private String webAppDirectoryPath = null;
 
     @BeforeClass(alwaysRun = true)
     public void init()
@@ -50,13 +49,14 @@ public class HTTPXMLMessageTestCase extends CEPIntegrationTest{
 
         try {
             String warFilePath = FrameworkPathUtil.getSystemResourceLocation() +
-                    "artifacts" + File.separator + "CEP" + File.separator + "war"
-                    + File.separator;
+                                 "artifacts" + File.separator + "CEP" + File.separator + "war"
+                                 + File.separator;
 
-            String webAppDirectoryPath = FrameworkPathUtil.getCarbonHome() + File.separator + "repository" + File.separator + "deployment" + File.separator + "server" + File.separator + "webapps" + File.separator;
+            webAppDirectoryPath = FrameworkPathUtil.getCarbonHome() + File.separator + "repository" + File.separator +
+                                  "deployment" + File.separator + "server" + File.separator + "webapps" + File.separator;
             FileManager.copyResourceToFileSystem(warFilePath + webAppFileName, webAppDirectoryPath, webAppFileName);
             Thread.sleep(5000);
-        }  catch (Exception e) {
+        } catch (Exception e) {
             throw new RemoteException("Exception caught when deploying the war file into CEP server", e);
         }
 
@@ -75,7 +75,7 @@ public class HTTPXMLMessageTestCase extends CEPIntegrationTest{
         int startEPCount = eventPublisherAdminServiceClient.getActiveEventPublisherCount();
 
         //Add StreamDefinition
-        String streamDefinition = getJSONArtifactConfiguration("HTTPXMLMessageTestCase","org.wso2.sample.pizza.order_1.0.0.json");
+        String streamDefinition = getJSONArtifactConfiguration("HTTPXMLMessageTestCase", "org.wso2.sample.pizza.order_1.0.0.json");
         eventStreamManagerAdminServiceClient.addEventStreamAsString(streamDefinition);
         Assert.assertEquals(eventStreamManagerAdminServiceClient.getEventStreamCount(), startESCount + 1);
 
@@ -85,34 +85,31 @@ public class HTTPXMLMessageTestCase extends CEPIntegrationTest{
         Assert.assertEquals(eventReceiverAdminServiceClient.getActiveEventReceiverCount(), startERCount + 1);
 
         //Add HTTP Publisher
-        String eventPublisherConfig = getXMLArtifactConfiguration("HTTPXMLMessageTestCase", "PizzaDeliveryNofication.xml");
+        String eventPublisherConfig = getXMLArtifactConfiguration("HTTPXMLMessageTestCase", "PizzaDeliveryNotification.xml");
         eventPublisherAdminServiceClient.addEventPublisherConfiguration(eventPublisherConfig);
         Assert.assertEquals(eventPublisherAdminServiceClient.getActiveEventPublisherCount(), startEPCount + 1);
 
         //Send events
         Thread.sleep(2000);
         try {
-            PizzaOrderClient.sendPizzaOrder("http://localhost:9763/endpoints/httpInputEventAdaptor/PizzaOrder");
+            PizzaOrderClient.sendPizzaOrder("http://localhost:" + CEPIntegrationTestConstants.HTTP_PORT +
+                                            "/endpoints/httpInputEventAdaptor/PizzaOrder");
             Thread.sleep(2000);
         } catch (Throwable e) {
             log.error("Exception thrown: " + e.getMessage(), e);
             Assert.fail("Exception: " + e.getMessage());
         }
 
-        eventPublisherAdminServiceClient.removeActiveEventPublisherConfiguration("PizzaDeliveryNofication");
+        eventPublisherAdminServiceClient.removeActiveEventPublisherConfiguration("PizzaDeliveryNotification");
         eventReceiverAdminServiceClient.removeActiveEventReceiverConfiguration("PizzaOrder");
-        eventStreamManagerAdminServiceClient.removeEventStream("org.wso2.sample.pizza.order","1.0.0");
+        eventStreamManagerAdminServiceClient.removeEventStream("org.wso2.sample.pizza.order", "1.0.0");
     }
 
 
     @AfterClass(alwaysRun = true)
     public void destroy() throws Exception {
-        try {
-        } finally {
-            //reverting the changes done to cep sever
-            if (serverManager != null) {
-                serverManager.restoreToLastConfiguration();
-            }
+        if (webAppDirectoryPath != null) {
+            FileManager.deleteFile(webAppDirectoryPath + webAppFileName);
         }
         super.cleanup();
     }

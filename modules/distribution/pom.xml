@@ -1,27 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <!--
-~ Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
-~
-~ WSO2 Inc. licenses this file to you under the Apache License,
-~ Version 2.0 (the "License"); you may not use this file except
-~ in compliance with the License.
-~ You may obtain a copy of the License at
-~
-~    http://www.apache.org/licenses/LICENSE-2.0
-~
-~ Unless required by applicable law or agreed to in writing,
-~ software distributed under the License is distributed on an
-~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-~ KIND, either express or implied.  See the License for the
-~ specific language governing permissions and limitations
-~ under the License.
--->
+  ~ Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
         <groupId>org.wso2.cep</groupId>
         <artifactId>wso2cep-parent</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.0.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -42,27 +41,7 @@
 
     <build>
         <plugins>
-            <!--<plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>maven-buildnumber-plugin</artifactId>
-                <version>0.9.4</version>
-                <configuration>
-                    <format>{0,date,dd MMM yyyy}</format>
-                    <items>
-                        <item>timestamp</item>
-                    </items>
-                    <doCheck>false</doCheck>
-                    <doUpdate>false</doUpdate>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>create</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>-->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -84,19 +63,56 @@
                                     <overWrite>true</overWrite>
                                     <outputDirectory>target</outputDirectory>
                                 </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>client-libs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <!--client libs-->
                                 <artifactItem>
-                                    <groupId>org.apache.shindig</groupId>
-                                    <artifactId>shindig-server</artifactId>
-                                    <version>2.5.2</version>
-                                    <type>war</type>
+                                    <groupId>org.wso2.carbon.analytics-common</groupId>
+                                    <artifactId>org.wso2.carbon.databridge.commons</artifactId>
+                                    <version>${carbon.analytics-common.version}</version>
+                                    <type>jar</type>
                                     <overWrite>true</overWrite>
-                                    <outputDirectory>target/shindig</outputDirectory>
+                                    <outputDirectory>target/client-lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.carbon.analytics-common</groupId>
+                                    <artifactId>org.wso2.carbon.databridge.commons.thrift</artifactId>
+                                    <version>${carbon.analytics-common.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>target/client-lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.carbon.analytics-common</groupId>
+                                    <artifactId>org.wso2.carbon.databridge.commons.binary</artifactId>
+                                    <version>${carbon.analytics-common.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>target/client-lib</outputDirectory>
+                                </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.wso2.carbon.analytics-common</groupId>
+                                    <artifactId>org.wso2.carbon.databridge.agent</artifactId>
+                                    <version>${carbon.analytics-common.version}</version>
+                                    <type>jar</type>
+                                    <overWrite>true</overWrite>
+                                    <outputDirectory>target/client-lib</outputDirectory>
                                 </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -116,6 +132,21 @@
                     </dependency>
                 </dependencies>
                 <executions>
+                    <execution>
+                        <id>1-usermgt-fix</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <!-- commenting "GetAllRolesOfUserEnabled" property to fix
+                                https://wso2.org/jira/browse/IDENTITY-3489 -->
+                                <echo message="########### Comment out GetAllRolesOfUserEnabled property ##############" />
+                                <replace file="target/wso2carbon-core-${carbon.kernel.version}/repository/conf/user-mgt.xml" token="&lt;Property name=&quot;GetAllRolesOfUserEnabled&quot;&gt;true&lt;/Property&gt;" value="&lt;!--Property name=&quot;GetAllRolesOfUserEnabled&quot;&gt;true&lt;/Property--&gt;" />
+                            </target>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>3-extract-docs-from-components</id>
                         <phase>package</phase>
@@ -211,6 +242,12 @@
                                     </then>
                                 </if>
                                 <delete dir="${tempdir}" />
+                                <!-- Moving identity features downwards in management console UI -->
+                                <property name="tempdir2" value="target/identity-ui" />
+                                <mkdir dir="${tempdir2}" />
+                                <unzip src="target/wso2carbon-core-${carbon.kernel.version}/repository/components/plugins/org.wso2.carbon.identity.account.mgt.menu.ui_${carbon.identity.version}.jar" dest="${tempdir2}" />
+                                <replace file="${tempdir2}/META-INF/component.xml" token="&lt;parent-menu&gt;identity_menu&lt;/parent-menu&gt;" value="&lt;parent-menu&gt;configure_menu&lt;/parent-menu&gt;" />
+                                <zip destfile="target/wso2carbon-core-${carbon.kernel.version}/repository/components/plugins/org.wso2.carbon.identity.account.mgt.menu.ui_${carbon.identity.version}.jar" basedir="${tempdir2}" />
                             </target>
                         </configuration>
                     </execution>
@@ -227,6 +264,7 @@
                                 <delete dir="target/sources" />
                                 <delete dir="target/antrun/" />
                                 <delete dir="target/site" />
+                                <delete dir="target/identity-ui" />
                             </target>
                         </configuration>
                         <goals>
@@ -274,6 +312,13 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

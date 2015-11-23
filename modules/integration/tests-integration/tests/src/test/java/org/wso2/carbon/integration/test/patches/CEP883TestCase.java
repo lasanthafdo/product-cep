@@ -1,20 +1,19 @@
 /*
-*  Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
-*
-*  WSO2 Inc. licenses this file to you under the Apache License,
-*  Version 2.0 (the "License"); you may not use this file except
-*  in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
+ * Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.wso2.carbon.integration.test.patches;
 
 //import org.apache.commons.logging.Log;
@@ -52,12 +51,6 @@ package org.wso2.carbon.integration.test.patches;
 //import org.wso2.cep.integration.common.utils.ConfigurationUtil;
 
 import org.wso2.cep.integration.common.utils.CEPIntegrationTest;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.rmi.RemoteException;
 
 public class CEP883TestCase extends CEPIntegrationTest {
 /*
@@ -257,7 +250,7 @@ public class CEP883TestCase extends CEPIntegrationTest {
     @Test(groups = {"wso2.cep"}, dependsOnMethods = {"addEventBuilderTestScenario1"})
     public void addEventProcessorTestScenario1() throws RemoteException, InterruptedException {
         log.info("=======================Adding a execution plan ======================= ");
-        int startCount = eventProcessorAdminServiceClient.getAllActiveExecutionPlanConfigurationCount();
+        int startCount = eventProcessorAdminServiceClient.getActiveExecutionPlanConfigurationCount();
         //configurationUtil.addEventProcessor();
 
         ExecutionPlanConfigurationDto executionPlanConfigurationDto = new ExecutionPlanConfigurationDto();
@@ -284,7 +277,7 @@ public class CEP883TestCase extends CEPIntegrationTest {
 
         Thread.sleep(1000);
         log.info("=======================Check the execution plan ======================= ");
-        Assert.assertEquals(eventProcessorAdminServiceClient.getAllActiveExecutionPlanConfigurationCount(), 1 + startCount);
+        Assert.assertEquals(eventProcessorAdminServiceClient.getActiveExecutionPlanConfigurationCount(), 1 + startCount);
 
     }
 

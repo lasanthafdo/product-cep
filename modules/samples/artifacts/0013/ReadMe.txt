@@ -1,6 +1,6 @@
 This sample uses 
-EventReceiver:  Json/mqtt with default mapping
+EventReceiver:  Map, Text/JMS with default mapping
 EventPublisher: logger
 
-Producers:     mqtt
+Producers:     jms
 Consumers:     -

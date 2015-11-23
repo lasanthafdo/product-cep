@@ -1,20 +1,19 @@
 /*
-*  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
-*
-*  WSO2 Inc. licenses this file to you under the Apache License,
-*  Version 2.0 (the "License"); you may not use this file except
-*  in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
+ * Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.wso2.carbon.integration.test.inputflow;
 
 import org.apache.commons.logging.Log;
@@ -30,8 +29,9 @@ import org.wso2.carbon.automation.extensions.servers.jmsserver.controller.config
 import org.wso2.carbon.databridge.commons.Event;
 import org.wso2.carbon.integration.common.utils.mgt.ServerConfigurationManager;
 import org.wso2.carbon.integration.test.client.MQTTEventPublisherClient;
-import org.wso2.carbon.integration.test.client.TestAgentServer;
+import org.wso2.carbon.integration.test.client.Wso2EventServer;
 import org.wso2.cep.integration.common.utils.CEPIntegrationTest;
+import org.wso2.cep.integration.common.utils.CEPIntegrationTestConstants;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +48,6 @@ public class MQTTTestCase extends CEPIntegrationTest {
 
     private static final Log log = LogFactory.getLog(MQTTTestCase.class);
     private final String MQTT_CLIENT = "mqtt-client-0.4.0.jar";
-    private final String JAR_LOCATION = "/artifacts/CEP/jar";
     private JMSBrokerController activeMqBroker = null;
     private ServerConfigurationManager serverManager = null;
 
@@ -67,6 +66,7 @@ public class MQTTTestCase extends CEPIntegrationTest {
         setupMQTTBroker();
         //copying dependency mqtt jar files to component/lib
         try {
+            String JAR_LOCATION = File.separator + "artifacts" + File.separator + "CEP" + File.separator +"jar";;
             serverManager.copyToComponentLib(new File(getClass().getResource(JAR_LOCATION + File.separator + MQTT_CLIENT).toURI()));
             serverManager.restartGracefully();
         } catch (IOException e) {
@@ -88,35 +88,34 @@ public class MQTTTestCase extends CEPIntegrationTest {
     @Test(groups = {"wso2.cep"}, description = "Testing mqtt receiver with JSON formatted event")
     public void MQTTJSONTestScenario() throws Exception {
         final int messageCount = 3;
-
+        String samplePath = "inputflows" + File.separator + "sample0016";
         int startESCount = eventStreamManagerAdminServiceClient.getEventStreamCount();
         int startERCount = eventReceiverAdminServiceClient.getActiveEventReceiverCount();
         int startEPCount = eventPublisherAdminServiceClient.getActiveEventPublisherCount();
 
         //Add StreamDefinition
-        String streamDefinitionAsString = getJSONArtifactConfiguration("inputflows/sample0013", "org.wso2.event.sensor.stream_1.0.0.json");
+        String streamDefinitionAsString = getJSONArtifactConfiguration(samplePath, "org.wso2.event.sensor.stream_1.0.0.json");
         eventStreamManagerAdminServiceClient.addEventStreamAsString(streamDefinitionAsString);
         Assert.assertEquals(eventStreamManagerAdminServiceClient.getEventStreamCount(), startESCount + 1);
 
         //Add MQTT JSON EventReceiver without mapping
-        String eventReceiverConfig = getXMLArtifactConfiguration("inputflows/sample0013", "mqttEventReceiver.xml");
+        String eventReceiverConfig = getXMLArtifactConfiguration(samplePath, "mqttEventReceiver.xml");
         eventReceiverAdminServiceClient.addEventReceiverConfiguration(eventReceiverConfig);
         Assert.assertEquals(eventReceiverAdminServiceClient.getActiveEventReceiverCount(), startERCount + 1);
 
         //Add Wso2event EventPublisher
-        String eventPublisherConfig2 = getXMLArtifactConfiguration("inputflows/sample0013", "wso2EventPublisher.xml");
+        String eventPublisherConfig2 = getXMLArtifactConfiguration(samplePath, "wso2EventPublisher.xml");
         eventPublisherAdminServiceClient.addEventPublisherConfiguration(eventPublisherConfig2);
         Assert.assertEquals(eventPublisherAdminServiceClient.getActiveEventPublisherCount(), startEPCount + 1);
 
         // The data-bridge receiver
-        TestAgentServer agentServer = new TestAgentServer("inputflows/sample0013", 7661, true);
+        Wso2EventServer agentServer = new Wso2EventServer(samplePath, CEPIntegrationTestConstants.TCP_PORT, true);
         Thread agentServerThread = new Thread(agentServer);
         agentServerThread.start();
         // Let the server start
         Thread.sleep(10000);
 
-        MQTTEventPublisherClient.publish("tcp://localhost:1883", "sensordata",
-                "inputflows/sample0001", "mqttEvents.txt");
+        MQTTEventPublisherClient.publish("tcp://localhost:1883", "sensordata", samplePath, "mqttEvents.txt");
 
         //wait while all stats are published
         Thread.sleep(30000);
@@ -149,7 +148,11 @@ public class MQTTTestCase extends CEPIntegrationTest {
 
         try {
             Assert.assertEquals(agentServer.getMsgCount(), messageCount, "Incorrect number of messages consumed!");
-            Assert.assertEquals(agentServer.getPreservedEventList(), eventList, "Mapping is incorrect!");
+            List<Event> preservedEventList = agentServer.getPreservedEventList();
+            for (Event aEvent : preservedEventList) {
+                aEvent.setTimeStamp(0);
+            }
+            Assert.assertEquals(preservedEventList, eventList, "Mapping is incorrect!");
         } catch (Throwable e) {
             log.error("Exception thrown: " + e.getMessage(), e);
             Assert.fail("Exception: " + e.getMessage());

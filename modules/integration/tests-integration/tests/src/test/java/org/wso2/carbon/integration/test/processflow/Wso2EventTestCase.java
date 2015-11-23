@@ -1,20 +1,19 @@
 /*
-*  Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
-*
-*  WSO2 Inc. licenses this file to you under the Apache License,
-*  Version 2.0 (the "License"); you may not use this file except
-*  in compliance with the License.
-*  You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing,
-* software distributed under the License is distributed on an
-* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-* KIND, either express or implied.  See the License for the
-* specific language governing permissions and limitations
-* under the License.
-*/
+ * Copyright (c) 2015, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.wso2.carbon.integration.test.processflow;
 
 import org.apache.commons.logging.Log;
@@ -26,9 +25,10 @@ import org.testng.annotations.Test;
 import org.wso2.carbon.automation.engine.context.TestUserMode;
 import org.wso2.carbon.databridge.commons.StreamDefinition;
 import org.wso2.carbon.databridge.commons.utils.EventDefinitionConverterUtils;
-import org.wso2.carbon.integration.test.client.TestAgentServer;
+import org.wso2.carbon.integration.test.client.Wso2EventServer;
 import org.wso2.carbon.integration.test.client.Wso2EventClient;
 import org.wso2.cep.integration.common.utils.CEPIntegrationTest;
+import org.wso2.cep.integration.common.utils.CEPIntegrationTestConstants;
 
 public class Wso2EventTestCase extends CEPIntegrationTest {
 
@@ -55,7 +55,7 @@ public class Wso2EventTestCase extends CEPIntegrationTest {
 
 
         //Add StreamDefinition
-        String streamDefinitionAsString = getJSONArtifactConfiguration("Wso2EventTestCase","testWso2EventStream.json");
+        String streamDefinitionAsString = getJSONArtifactConfiguration("Wso2EventTestCase", "testWso2EventStream.json");
         eventStreamManagerAdminServiceClient.addEventStreamAsString(streamDefinitionAsString);
         Assert.assertEquals(eventStreamManagerAdminServiceClient.getEventStreamCount(), startESCount + 1);
 
@@ -73,14 +73,15 @@ public class Wso2EventTestCase extends CEPIntegrationTest {
         Assert.assertEquals(eventPublisherAdminServiceClient.getActiveEventPublisherCount(), startEPCount + 1);
 
         // The data-bridge receiver
-        TestAgentServer agentServer = new TestAgentServer("Wso2EventTestCase",7661, false);
+        Wso2EventServer agentServer = new Wso2EventServer("Wso2EventTestCase", CEPIntegrationTestConstants.TCP_PORT, false);
         Thread agentServerThread = new Thread(agentServer);
         agentServerThread.start();
         // Let the server start
         Thread.sleep(1000);
 
-        Wso2EventClient.publish("thrift","localhost","7611","admin","admin",streamDefinition.getStreamId(),
-                "testWso2EventStreamData.csv","Wso2EventTestCase",streamDefinition,5,1000);
+        Wso2EventClient.publish("thrift", "localhost", String.valueOf(CEPIntegrationTestConstants.TCP_PORT), "admin",
+                                "admin", streamDefinition.getStreamId(), "testWso2EventStreamData.csv",
+                                "Wso2EventTestCase", streamDefinition, 5, 1000);
 
         //wait while all stats are published
         Thread.sleep(30000);
@@ -88,7 +89,7 @@ public class Wso2EventTestCase extends CEPIntegrationTest {
         try {
             Assert.assertEquals(agentServer.getMsgCount(), messageCount, "Incorrect number of messages consumed!");
 
-            eventStreamManagerAdminServiceClient.removeEventStream("org.wso2.sample.pizza.order","1.0.0");
+            eventStreamManagerAdminServiceClient.removeEventStream("org.wso2.sample.pizza.order", "1.0.0");
             eventPublisherAdminServiceClient.removeInactiveEventPublisherConfiguration("sendWso2EventsPublisher");
             eventReceiverAdminServiceClient.removeInactiveEventReceiverConfiguration("wso2EventReceiver");
             Thread.sleep(2000);

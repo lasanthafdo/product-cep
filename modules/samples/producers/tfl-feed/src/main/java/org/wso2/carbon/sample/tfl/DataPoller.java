@@ -20,7 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.sample.tfl.bus.BusStream;
 import org.wso2.carbon.sample.tfl.busstop.BusStop;
-import org.wso2.carbon.sample.tfl.traffic.StreamPollingTask;
+import org.wso2.carbon.sample.tfl.traffic.TrafficPollingTask;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -97,15 +97,15 @@ public class DataPoller extends Thread {
     }
 
     private static void getDisruptions() {
-        StreamPollingTask ds;
+        TrafficPollingTask ds;
         long time = System.currentTimeMillis();
 
         while (true) {
-            ds = new StreamPollingTask(TrafficURL);
+            ds = new TrafficPollingTask(TrafficURL);
             log.info("Getting Disruption Data ");
             ds.start();
             try {
-                time += 300000;
+                time += 30000;
                 Thread.sleep(time - System.currentTimeMillis());
             } catch (InterruptedException e) {
                 //ignore
@@ -139,16 +139,16 @@ public class DataPoller extends Thread {
             arr = inputLine.split(",");
             TflStream.timeOffset = time - Long.parseLong(arr[2]);
 
-            ArrayList<String> stopJsonList = new ArrayList<String>();
+            ArrayList<String> csvBusStopList = new ArrayList<String>();
             while ((inputLine = in.readLine()) != null) {
                 inputLine = inputLine.replaceAll("[\\[\\]\"]", "");
                 arr = inputLine.split(",");
-                BusStop temp = new BusStop(arr[1], Double.parseDouble(arr[2]),
+                BusStop busStop = new BusStop(arr[1], Double.parseDouble(arr[2]),
                         Double.parseDouble(arr[3]));
-                TflStream.map.put(arr[1], temp);
-                stopJsonList.add(temp.toString());
+                TflStream.map.put(arr[1], busStop);
+                csvBusStopList.add(busStop.toCsv());
             }
-            TflStream.appendToFile("tfl-bus-stop-data.out", stopJsonList);
+            TflStream.writeToFile("tfl-bus-stop-data.out", csvBusStopList, false);
         } catch (IOException e) {
             log.error("IOException while reading bus stop data: " + e.getMessage(), e);
         } finally {

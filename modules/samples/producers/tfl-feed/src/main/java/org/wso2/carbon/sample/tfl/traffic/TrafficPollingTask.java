@@ -29,12 +29,12 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class StreamPollingTask extends Thread {
-    private static Log log = LogFactory.getLog(StreamPollingTask.class);
+public class TrafficPollingTask extends Thread {
+    private static Log log = LogFactory.getLog(TrafficPollingTask.class);
 
     private String streamURL;
 
-    public StreamPollingTask(String url) {
+    public TrafficPollingTask(String url) {
         super();
         this.streamURL = url;
     }
@@ -48,7 +48,7 @@ public class StreamPollingTask extends Thread {
                 // optional default is GET
                 con.setRequestMethod("GET");
                 int responseCode = con.getResponseCode();
-                log.info("\nSending 'GET' request to URL : " + streamURL);
+                log.info("Sending 'GET' request to URL : " + streamURL);
                 log.info("Response Code : " + responseCode);
 
                 double t = System.currentTimeMillis();
@@ -75,12 +75,12 @@ public class StreamPollingTask extends Thread {
             ArrayList<String> list = new ArrayList<String>();
             int count = 0;
             for (Disruption disruption : disruptionsList) {
-                if (disruption.state.contains("Active")) {
+                if (disruption.getState().contains("Active")) {
                     list.add(disruption.toString());
                 }
                 count++;
             }
-            TflStream.appendToFile("tfl-traffic-data.out", list);
+            TflStream.writeToFile("tfl-traffic-data.out", list, true);
         } catch (IOException e) {
             log.error("Error occurred while getting traffic data: " + e.getMessage(), e);
         }

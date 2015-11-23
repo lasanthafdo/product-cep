@@ -56,7 +56,7 @@ public class TflStream {
             playback = Boolean.parseBoolean(args[0]);
         }
         try {
-            BusInfoUpdater busInfoUpdater = new BusInfoUpdater(System.currentTimeMillis(), 1000, endPointBus);
+            BusInfoUpdater busInfoUpdater = new BusInfoUpdater(System.currentTimeMillis(), 5000, endPointBus);
             DataPoller busData = new DataPoller(true, playback);
             DataPoller trafficData = new DataPoller(false, playback);
             trafficData.start();
@@ -89,37 +89,14 @@ public class TflStream {
         }
     }
 
-    public static void appendToFile(String filename, List<String> jsonList) {
+    public static void writeToFile(String filename, List<String> jsonList, boolean append) {
         File outFile = new File(filename);
         BufferedWriter bw = null;
         try {
-            FileWriter fw = new FileWriter(outFile.getAbsoluteFile());
+            FileWriter fw = new FileWriter(outFile.getAbsoluteFile(), append);
             bw = new BufferedWriter(fw);
             for (String data : jsonList) {
-                bw.append(data);
-                bw.newLine();
-            }
-        } catch (IOException e) {
-            log.error("IOException occurred when writing to file: " + e.getMessage(), e);
-        } finally {
-            try {
-                if (bw != null) {
-                    bw.close();
-                }
-            } catch (IOException e) {
-                log.error("Error while closing stream: " + e.getMessage(), e);
-            }
-        }
-    }
-
-    public static void writeToFile(String filename, List<String> jsonList) {
-        File outFile = new File(filename);
-        BufferedWriter bw = null;
-        try {
-            FileWriter fw = new FileWriter(outFile.getAbsoluteFile());
-            bw = new BufferedWriter(fw);
-            for (String data : jsonList) {
-                bw.append(data);
+                bw.write(data);
                 bw.newLine();
             }
         } catch (IOException e) {

@@ -43,11 +43,12 @@ public class BusInfoUpdater extends Thread {
                     ArrayList<String> jsonList = new ArrayList<String>();
                     for (Bus bus : buses) {
                         String msg = bus.move(currentTime, period);
-                        if (msg != null)
-                            jsonList.add(msg);
+                        if (msg != null) {
+                            jsonList.add(bus.toCsv());
+                        }
                     }
                     currentTime += period;
-                    TflStream.writeToFile("tfl-bus-data.out", jsonList);
+                    TflStream.writeToFile("tfl-bus-data.out", jsonList, true);
 
                     long diff = currentTime - System.currentTimeMillis();
                     if (diff >= 0) {

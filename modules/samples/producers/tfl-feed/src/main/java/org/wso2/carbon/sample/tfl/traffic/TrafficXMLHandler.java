@@ -22,9 +22,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import java.util.ArrayList;
 
-/**
- * Created by isuru on 2/9/15.
- */
 public class TrafficXMLHandler extends DefaultHandler {
     // SAX callback implementations from DocumentHandler, ErrorHandler, etc.
     private ArrayList<Disruption> list;
@@ -46,13 +43,12 @@ public class TrafficXMLHandler extends DefaultHandler {
             throws SAXException {
         startElement = true;
         if (qName.equals("Disruption")) {
-            //System.out.println("disruption");
             if (current != null) {
                 current.end();
                 list.add(current);
             }
             current = new Disruption();
-            current.id = atts.getValue(0);
+            current.setId(atts.getValue(0));
         } else if (qName.equals("Line")) {
             inLine = true;
         } else if (qName.equals("Polygon")) {
@@ -85,15 +81,13 @@ public class TrafficXMLHandler extends DefaultHandler {
     }
 
     public void characters(char[] ch, int start, int len) throws SAXException {
-        if(startElement) {
+        if (startElement) {
             sb.setLength(0);
             sb.append(new String(ch, start, len));
             startElement = false;
-        }
-        else {
+        } else {
             sb.append(new String(ch, start, len));
         }
-
     }
 
 }

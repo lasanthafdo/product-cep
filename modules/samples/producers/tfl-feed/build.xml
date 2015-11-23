@@ -16,10 +16,11 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   -->
-<project name="dataagent" default="run">
+<project name="tflfeed" default="run">
 
     <property name="carbon.home" value="../../.."/>
     <property name="src.dir" value="src"/>
+    <property name="resources.dir" value="src/main/resources"/>
     <property name="temp.dir" value="temp"/>
     <property name="lib.dir" value="../../lib"/>
     <property name="class.dir" value="${temp.dir}/classes"/>
@@ -54,6 +55,11 @@
             <include name="*/**"/>
             <classpath refid="javac.classpath"/>
         </javac>
+        <copy todir="${class.dir}" overwrite="true">
+            <fileset dir="${resources.dir}">
+                <include name="*.properties"/>
+            </fileset>
+        </copy>
     </target>
 
     <target name="run" depends="compile">

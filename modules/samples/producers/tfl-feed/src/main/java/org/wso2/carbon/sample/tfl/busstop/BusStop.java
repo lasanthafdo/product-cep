@@ -17,20 +17,25 @@
 package org.wso2.carbon.sample.tfl.busstop;
 
 public class BusStop {
-	public String id;
-	public double longitude;
-	public double latitude;
-	
-	public BusStop(String StopID, double lat, double lon) {
-		this.id = StopID;
-		this.latitude = lat;
-		this.longitude = lon;
-	}
+    public String id;
+    public double longitude;
+    public double latitude;
 
-	@Override
-	public String toString() {
-		return "{'id':'" + id + "','timeStamp':" + System.currentTimeMillis() +
+    public BusStop(String StopID, double lat, double lon) {
+        this.id = StopID;
+        this.latitude = lat;
+        this.longitude = lon;
+    }
+
+    @Override
+    public String toString() {
+        return "{'id':'" + id + "','timeStamp':" + System.currentTimeMillis() +
                 ", 'lattitude': " + latitude + ",'longitude': " + longitude +
-                ", 'speed' :"+ 0 + ", 'angle':"+0+", 'type' : 'STOP'}";
-	}
+                ", 'speed' :" + 0 + ", 'angle':" + 0 + ", 'type' : 'STOP'}";
+    }
+
+    public String toCsv() {
+        return id + "," + System.currentTimeMillis() + "," + latitude + "," + longitude
+                + "," + 0 + "," + 0 + ",STOP";
+    }
 }

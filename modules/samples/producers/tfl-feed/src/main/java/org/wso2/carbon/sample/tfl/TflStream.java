@@ -71,20 +71,15 @@ public class TflStream {
     }
 
     public static void send(ArrayList<String> jsonList, String endPoint) {
-
         for (String data : jsonList) {
             HttpClient client = new DefaultHttpClient();
             HttpPost post = new HttpPost(endPoint);
             try {
-
                 StringEntity entity = new StringEntity(data);
                 post.setEntity(entity);
-                //System.out.println("The Message Sent : " + data);
                 HttpResponse response = client.execute(post);
-                // System.out.println(response);
-
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("IOException when sending via HTTP: " + e.getMessage(), e);
             }
         }
     }

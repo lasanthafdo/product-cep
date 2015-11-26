@@ -39,8 +39,11 @@ public class TflEventDispatcher {
     private static Log log = LogFactory.getLog(TflEventDispatcher.class);
 
     public static void main(String[] args) {
-        EventDispatcher trafficDisruptionData = new EventDispatcher("http://localhost:9763/endpoints/GpsDataOverHttpTrafficStream", "tfl-traffic-data.out");
-        EventDispatcher busTrafficData = new EventDispatcher("http://localhost:9763/endpoints/BusTrafficCsvReceiver", "tfl-bus-data.out");
+        EventDispatcher trafficDisruptionData = new EventDispatcher(
+                "http://localhost:9763/endpoints/GpsDataOverHttpTrafficStream", "tfl-traffic-data.out", 1000);
+        EventDispatcher busTrafficData = new EventDispatcher(
+                "http://localhost:9763/endpoints/BusTrafficCsvReceiver", "tfl-bus-data.out", 200);
+        EventDispatcher busStopData = new EventDispatcher("http://localhost:9763/endpoints/BusTrafficCsvReceiver", "tfl-bus-data.out", 200);
         ExecutorService executorService = Executors.newFixedThreadPool(5);
         executorService.submit(trafficDisruptionData);
         executorService.submit(busTrafficData);
@@ -52,8 +55,10 @@ public class TflEventDispatcher {
         private HttpPost post = null;
         private String endPoint = "http://localhost:9763/endpoints/GpsDataOverHttpTrafficStream";
         private String filename = "";
+        private long delayBetweenEvents = 1000;
 
-        public EventDispatcher(String endpoint, String filename) {
+        public EventDispatcher(String endpoint, String filename, long delayBetweenEvents) {
+            this.delayBetweenEvents = delayBetweenEvents;
             this.endPoint = endpoint;
             this.filename = filename;
             client = new DefaultHttpClient();
@@ -69,7 +74,7 @@ public class TflEventDispatcher {
                 br = new BufferedReader(new FileReader(filename));
                 while ((sCurrentLine = br.readLine()) != null) {
                     sendEvent(sCurrentLine);
-                    Thread.sleep(1000);
+                    Thread.sleep(delayBetweenEvents);
                 }
             } catch (IOException e) {
                 log.error("IOException when reading from file: " + filename, e);

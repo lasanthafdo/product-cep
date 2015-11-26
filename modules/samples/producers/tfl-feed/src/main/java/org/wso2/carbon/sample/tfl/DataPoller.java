@@ -31,17 +31,17 @@ import java.util.ArrayList;
 
 public class DataPoller extends Thread {
 
-    public static final String RecordedBusStopURL = "http://localhost/TFL/stop.txt";
-    public static final String RecordedTrafficURL = "http://localhost/TFL/tims_feed.xml";
-    public static final String RecordedBusURL = "http://localhost/TFL/data";
+    public static final String recordedBusStopURL = "http://localhost/TFL/stop.txt";
+    public static final String recordedTrafficURL = "http://localhost/TFL/tims_feed.xml";
+    public static final String recordedBusURL = "http://localhost/TFL/data";
 
-    public static final String LiveTrafficURL = "https://data.tfl.gov.uk/tfl/syndication/feeds/tims_feed.xml";
-    public static final String LiveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?ReturnList=StopID,Latitude,Longitude";
-    public static final String LiveBusURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?ReturnList=StopID,LineID,VehicleID,EstimatedTime";
+    public static final String liveTrafficURL = "https://data.tfl.gov.uk/tfl/syndication/feeds/tims_feed.xml";
+    public static final String liveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?ReturnList=StopID,Latitude,Longitude";
+    public static final String liveBusURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=29,25,38&ReturnList=StopID,LineID,VehicleID,EstimatedTime";
 
-    public static String TrafficURL;
-    public static String BusURL;
-    public static String BusStopURL;
+    public static String trafficURL;
+    public static String busURL;
+    public static String busStopURL;
 
     private static Log log = LogFactory.getLog(DataPoller.class);
 
@@ -52,13 +52,13 @@ public class DataPoller extends Thread {
         this.isBus = isBus;
 
         if (playback) {
-            TrafficURL = RecordedTrafficURL;
-            BusURL = RecordedBusURL;
-            BusStopURL = RecordedBusStopURL;
+            trafficURL = recordedTrafficURL;
+            busURL = recordedBusURL;
+            busStopURL = recordedBusStopURL;
         } else {
-            TrafficURL = LiveTrafficURL;
-            BusURL = LiveBusURL;
-            BusStopURL = LiveBusStopURL;
+            trafficURL = liveTrafficURL;
+            busURL = liveBusURL;
+            busStopURL = liveBusStopURL;
         }
     }
 
@@ -78,8 +78,8 @@ public class DataPoller extends Thread {
         long time = System.currentTimeMillis();
         int i = 0;
         while (true) {
-            String url = BusURL;
-            if (BusURL.contains("localhost"))
+            String url = busURL;
+            if (busURL.contains("localhost"))
                 url += i + ".txt";
             log.info(url);
             b = new BusStream(url);
@@ -101,7 +101,7 @@ public class DataPoller extends Thread {
         long time = System.currentTimeMillis();
 
         while (true) {
-            ds = new TrafficPollingTask(TrafficURL);
+            ds = new TrafficPollingTask(trafficURL);
             log.info("Getting Disruption Data ");
             ds.start();
             try {
@@ -120,14 +120,14 @@ public class DataPoller extends Thread {
         try {
             String[] arr;
 
-            URL obj = new URL(BusStopURL);
+            URL obj = new URL(busStopURL);
             con = (HttpURLConnection) obj.openConnection();
 
             // optional default is GET
             con.setRequestMethod("GET");
 
             int responseCode = con.getResponseCode();
-            log.info("\nSending 'GET' request to URL : " + BusStopURL);
+            log.info("\nSending 'GET' request to URL : " + busStopURL);
             log.info("Response Code : " + responseCode);
 
             in = new BufferedReader(new InputStreamReader(con.getInputStream()));

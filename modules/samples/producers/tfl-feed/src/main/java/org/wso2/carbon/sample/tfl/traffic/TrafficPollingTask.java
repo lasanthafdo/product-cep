@@ -76,7 +76,7 @@ public class TrafficPollingTask extends Thread {
             int count = 0;
             for (Disruption disruption : disruptionsList) {
                 if (disruption.getState().contains("Active")) {
-                    list.add(disruption.toString());
+                    list.add(disruption.toJson());
                 }
                 count++;
             }

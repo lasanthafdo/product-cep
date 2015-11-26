@@ -105,16 +105,16 @@ public class Bus {
     public String toString() {
         return "{'id':'" + id + "','timeStamp':" + System.currentTimeMillis() +
                 ", 'lattitude': " + latitude + ",'longitude': " + longitude +
-                ", 'speed' :" + speed + ", 'angle':" + angle + ", 'type' : 'VEHICLE'}";
+                ", 'type' : 'VEHICLE'" + ", 'speed' :" + speed + ", 'angle':" + angle + "}";
     }
 
     public String getCsvHeader() {
-        return "id, timestamp, latitude, longitude, speed, angle, type";
+        return "id, timestamp, latitude, longitude, type, speed, angle";
     }
 
     public String toCsv() {
         return id + "," + System.currentTimeMillis() +
                 "," + latitude + "," + longitude +
-                "," + speed + "," + angle + ",VEHICLE";
+                ",VEHICLE," + speed + "," + angle;
     }
 }

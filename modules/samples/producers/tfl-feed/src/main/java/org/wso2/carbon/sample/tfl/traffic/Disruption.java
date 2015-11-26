@@ -52,16 +52,16 @@ public class Disruption {
         StringBuilder sb = new StringBuilder();
         if (coords != null) {
             String[] temp = coords.split(",");
-            sb.append("{ \n 'type': 'Polygon', \n 'coordinates': [[");
+            sb.append("{ 'type': 'Polygon',  'coordinates': [[");
             for (int i = 0; i < temp.length - 1; i += 2) {
                 if (i != 0) {
                     sb.append(",");
                 }
                 sb.append("[").append(Double.parseDouble(temp[i])).append(",").append(Double.parseDouble(temp[i + 1])).append("]");
             }
-            sb.append("]] \n }");
+            sb.append("]]  }");
         } else {
-            sb.append("{ \n 'type': 'Polygon', \n 'coordinates': [] \n }");
+            sb.append("{  'type': 'Polygon',  'coordinates': []  }");
         }
         coordinates = sb.toString();
     }
@@ -69,7 +69,7 @@ public class Disruption {
     public void setCoordsPoly(Coordinate[] coords) {
         StringBuilder sb = new StringBuilder();
         if (coords.length != 0) {
-            sb.append("{ \n 'type': 'Polygon', \n 'coordinates': [[");
+            sb.append("{  'type': 'Polygon',  'coordinates': [[");
 
             for (int i = 0; i < coords.length; i++) {
                 if (i != 0) {
@@ -77,9 +77,9 @@ public class Disruption {
                 }
                 sb.append("[").append(coords[i].x).append(",").append(coords[i].y).append("]");
             }
-            sb.append("]] \n }");
+            sb.append("]]  }");
         } else {
-            sb.append("{ \n 'type': 'Polygon', \n 'coordinates': [] \n }");
+            sb.append("{  'type': 'Polygon',  'coordinates': []  }");
         }
         coordinates = sb.toString();
     }
@@ -130,6 +130,16 @@ public class Disruption {
                 + " 'information': " + "'Location- " + location + " Comments- " + comments + "'" + "\n"
                 + " }, \n"
                 + "'geometry' : " + coordinates + "\n}";
+    }
+
+    public String toJson() {
+        return "{'id': " + id + ", "
+                + "'properties': { "
+                + " 'timeStamp': " + System.currentTimeMillis() + ", "
+                + " 'state': '" + severity + "', "
+                + " 'information': " + "'Location- " + location + " Comments- " + comments + "'"
+                + " }, "
+                + "'geometry' : " + coordinates + "}";
     }
 
     public String getCsvHeader() {

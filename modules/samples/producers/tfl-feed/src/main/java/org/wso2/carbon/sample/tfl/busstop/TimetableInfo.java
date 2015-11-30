@@ -16,15 +16,21 @@
 
 package org.wso2.carbon.sample.tfl.busstop;
 
-public class BusStop {
-    public String id;
-    public double longitude;
-    public double latitude;
+public class TimetableInfo {
+    private String id;
+    private double longitude;
+    private double latitude;
+    private int hour;
+    private int min;
+    private String day;
 
-    public BusStop(String StopID, double lat, double lon) {
-        this.id = StopID;
+    public TimetableInfo(String stopID, double lat, double lon, int hour, int min, String day) {
+        this.id = stopID;
         this.latitude = lat;
         this.longitude = lon;
+        this.hour = hour;
+        this.min = min;
+        this.day = day;
     }
 
     @Override
@@ -36,6 +42,6 @@ public class BusStop {
 
     public String toCsv() {
         return id + "," + System.currentTimeMillis() + "," + latitude + "," + longitude
-                + ",STOP" + "," + 0 + "," + 0;
+                + ",STOP" + "," + day + "," + hour + "," + min;
     }
 }

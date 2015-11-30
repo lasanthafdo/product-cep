@@ -16,12 +16,12 @@
 
 package org.wso2.carbon.sample.tfl.busstop;
 
-public class BusStop {
+public class StopPoint {
     public String id;
     public double longitude;
     public double latitude;
 
-    public BusStop(String StopID, double lat, double lon) {
+    public StopPoint(String StopID, double lat, double lon) {
         this.id = StopID;
         this.latitude = lat;
         this.longitude = lon;

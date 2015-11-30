@@ -27,6 +27,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.wso2.carbon.sample.tfl.bus.Bus;
 import org.wso2.carbon.sample.tfl.busstop.BusStop;
+import org.wso2.carbon.sample.tfl.busstop.StopPoint;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.BufferedWriter;
@@ -41,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TflStream {
     public static HashMap<String, BusStop> map = new HashMap<String, BusStop>();
+    public static HashMap<String, StopPoint> stopMap = new HashMap<String, StopPoint>();
 
     public static ConcurrentHashMap<String, Bus> buses = new ConcurrentHashMap<String, Bus>();
     public static long timeOffset;
@@ -59,7 +61,7 @@ public class TflStream {
             BusInfoUpdater busInfoUpdater = new BusInfoUpdater(System.currentTimeMillis(), 5000, endPointBus);
             DataPoller busData = new DataPoller(true, playback);
             DataPoller trafficData = new DataPoller(false, playback);
-            trafficData.start();
+            //trafficData.start();
             busData.start();
             System.out.println("Started getting data");
             Thread.sleep(30000);

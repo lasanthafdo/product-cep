@@ -22,7 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.wso2.carbon.sample.tfl.bus.BusStream;
 import org.wso2.carbon.sample.tfl.busstop.BusStop;
-import org.wso2.carbon.sample.tfl.busstop.StopPoint;
+import org.wso2.carbon.sample.tfl.busstop.TimetableInfo;
 import org.wso2.carbon.sample.tfl.traffic.TrafficPollingTask;
 
 import java.io.BufferedReader;
@@ -135,7 +135,7 @@ public class DataPoller extends Thread {
             con.setRequestMethod("GET");
 
             int responseCode = con.getResponseCode();
-            log.info("\nSending 'GET' request to URL : " + stopPointURL);
+            log.info("Sending 'GET' request to URL : " + stopPointURL);
             log.info("Response Code : " + responseCode);
 
             in = new BufferedReader(new InputStreamReader(con.getInputStream()));
@@ -144,10 +144,12 @@ public class DataPoller extends Thread {
             long time = System.currentTimeMillis();
             inputLine = in.readLine();
             JSONArray jsonArray = new JSONArray(inputLine);
-            List<String> jsonTimetableList = new ArrayList<>();
+            List<String> csvTimetableList = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject stopPoint = jsonArray.getJSONObject(i);
                 String naptanId = (String) stopPoint.get("naptanId");
+                Double latitude = (Double) stopPoint.get("lat");
+                Double longitude = (Double) stopPoint.get("lon");
                 URL ttUrl = new URL(timeTableURL + naptanId);
                 BufferedReader ttBufferedReader = null;
                 HttpURLConnection ttUrlConnection = null;
@@ -170,10 +172,15 @@ public class DataPoller extends Thread {
                         JSONObject schedulesObj = (JSONObject) ((JSONArray) ((JSONObject) timetableObj.get("timetable")).get("routes")).get(0);
                         JSONArray timetableArray = (JSONArray) ((JSONObject) ((JSONArray) schedulesObj.get("schedules")).get(1)).get("knownJourneys");
                         for (int j = 0; j < timetableArray.length(); j++) {
-                            //TimetableInfo timetableInfo = new TimetableInfo(naptanId, )
-                            jsonTimetableList.add(timetableArray.get(j).toString());
+                            JSONObject timetableInfoObj = (JSONObject) timetableArray.get(j);
+                            TimetableInfo timetableInfo = new TimetableInfo(naptanId, latitude, longitude,
+                                    Integer.valueOf((String) timetableInfoObj.get("hour")),
+                                    Integer.valueOf((String) timetableInfoObj.get("minute")), "Friday");
+                            csvTimetableList.add(timetableInfo.toCsv());
                         }
                     }
+                } catch (IOException e) {
+                    log.error("IOException while reading time table data for URL: " + ttUrl, e);
                 } finally {
                     if (ttUrlConnection != null) {
                         ttUrlConnection.disconnect();
@@ -183,22 +190,9 @@ public class DataPoller extends Thread {
                     }
                 }
             }
-//            inputLine = inputLine.replaceAll("[\\[\\]\"]", "");
-//            arr = inputLine.split(",");
-//            TflStream.timeOffset = time - Long.parseLong(arr[2]);
-
-            ArrayList<String> csvBusStopList = new ArrayList<String>();
-            while ((inputLine = in.readLine()) != null) {
-                inputLine = inputLine.replaceAll("[\\[\\]\"]", "");
-                arr = inputLine.split(",");
-                StopPoint stopPoint = new StopPoint(arr[1], Double.parseDouble(arr[2]),
-                        Double.parseDouble(arr[3]));
-                TflStream.stopMap.put(arr[1], stopPoint);
-                csvBusStopList.add(stopPoint.toCsv());
-            }
-            TflStream.writeToFile("tfl-timetable-data.out", csvBusStopList, false);
+            TflStream.writeToFile("tfl-timetable-data.out", csvTimetableList, true);
         } catch (IOException e) {
-            log.error("IOException while reading bus stop data: " + e.getMessage(), e);
+            log.error("IOException while reading time table data: " + e.getMessage(), e);
         } finally {
             try {
                 if (in != null) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.Traffic.ML;
+package org.wso2.carbon.sample.tfl.traffic.ml;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

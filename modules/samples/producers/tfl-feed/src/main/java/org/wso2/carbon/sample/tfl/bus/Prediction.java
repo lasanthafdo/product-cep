@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.BusStop;
+package org.wso2.carbon.sample.tfl.bus;
 
-public class BusStop {
-	public String id;
-	public double longitude;
-	public double latitude;
+import org.wso2.carbon.sample.tfl.busstop.BusStop;
+
+public class Prediction implements Comparable<Prediction> {
+	public BusStop busStop;
+	public long time;
 	
-	public BusStop(String StopID, double lat, double lon) {
-		this.id = StopID;
-		this.latitude = lat;
-		this.longitude = lon;
-	}
+
+	public Prediction(BusStop busStop, long time) {
+	    this.busStop = busStop;
+	    this.time = time;
+    }
+
 
 	@Override
-	public String toString() {
-		return "{'id':'" + id + "','timeStamp':" + System.currentTimeMillis() +
-                ", 'lattitude': " + latitude + ",'longitude': " + longitude +
-                ", 'speed' :"+ 0 + ", 'angle':"+0+", 'type' : 'STOP'}";
+	public int compareTo(Prediction arg0) {
+		return (int) (time - arg0.time);
 	}
+	
 }

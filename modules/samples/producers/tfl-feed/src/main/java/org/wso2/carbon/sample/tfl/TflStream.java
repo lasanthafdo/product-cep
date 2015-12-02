@@ -18,68 +18,94 @@
 
 package org.wso2.carbon.sample.tfl;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.xml.stream.XMLStreamException;
-
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.wso2.carbon.sample.tfl.Bus.Bus;
-import org.wso2.carbon.sample.tfl.BusStop.BusStop;
+import org.wso2.carbon.sample.tfl.bus.Bus;
+import org.wso2.carbon.sample.tfl.busstop.BusStop;
+import org.wso2.carbon.sample.tfl.busstop.StopPoint;
+
+import javax.xml.stream.XMLStreamException;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class TflStream {
-	public static HashMap<String, BusStop> map = new HashMap<String, BusStop>();
+    public static HashMap<String, BusStop> map = new HashMap<String, BusStop>();
+    public static HashMap<String, StopPoint> stopMap = new HashMap<String, StopPoint>();
 
-	public static ConcurrentHashMap<String, Bus> busses = new ConcurrentHashMap<String, Bus>();
-	public static long timeOffset;
-	public static long lastTime = 0;
-	public static final String endPointBus =  "http://localhost:9763/endpoints/GpsDataOverHttpSpatialObjectStream";
-	public static final String endPointTraffic =  "http://localhost:9763/endpoints/GpsDataOverHttpTrafficStream";
+    public static ConcurrentHashMap<String, Bus> buses = new ConcurrentHashMap<String, Bus>();
+    public static long timeOffset;
+    public static long lastTime = 0;
+    public static final String endPointBus = "http://localhost:9763/endpoints/GpsDataOverHttpSpatialObjectStream";
+    public static final String endPointTraffic = "http://localhost:9763/endpoints/GpsDataOverHttpTrafficStream";
 
-	public static void main(String[] args) throws XMLStreamException {
-		boolean playback = false;
-		/*if(args.length != 0) {
-			playback = Boolean.parseBoolean(args[0]);
-		}*/
+    private static Log log = LogFactory.getLog(TflStream.class);
 
-		try {
-			Update update = new Update(System.currentTimeMillis(), 1000, endPointBus);
-			GetData busData = new GetData(true, playback);
-			GetData trafficData = new GetData(false, playback);
-			trafficData.start();
-			busData.start();
-			System.out.println("Started getting data");
-			Thread.sleep(30000);
-			update.start();
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public static void send(ArrayList<String> jsonList, String endPoint) {
+    public static void main(String[] args) throws XMLStreamException {
+        boolean playback = false;
+        if (args.length != 0) {
+            playback = Boolean.parseBoolean(args[0]);
+        }
+        try {
+            BusInfoUpdater busInfoUpdater = new BusInfoUpdater(System.currentTimeMillis(), 5000, endPointBus);
+            DataPoller busData = new DataPoller(true, playback);
+            DataPoller trafficData = new DataPoller(false, playback);
+            //trafficData.start();
+            busData.start();
+            System.out.println("Started getting data");
+            Thread.sleep(30000);
+            busInfoUpdater.start();
 
-		for (String data : jsonList) {
-			HttpClient client = new DefaultHttpClient();
-			HttpPost post = new HttpPost(endPoint);
-			try {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-				StringEntity entity = new StringEntity(data);
-				post.setEntity(entity);
-				//System.out.println("The Message Sent : " + data);
-				HttpResponse response = client.execute(post);
-				// System.out.println(response);
+    public static void send(ArrayList<String> jsonList, String endPoint) {
+        for (String data : jsonList) {
+            HttpClient client = new DefaultHttpClient();
+            HttpPost post = new HttpPost(endPoint);
+            try {
+                StringEntity entity = new StringEntity(data);
+                post.setEntity(entity);
+                HttpResponse response = client.execute(post);
+            } catch (IOException e) {
+                log.error("IOException when sending via HTTP: " + e.getMessage(), e);
+            }
+        }
+    }
 
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+    public static void writeToFile(String filename, List<String> jsonList, boolean append) {
+        File outFile = new File(filename);
+        BufferedWriter bw = null;
+        try {
+            FileWriter fw = new FileWriter(outFile.getAbsoluteFile(), append);
+            bw = new BufferedWriter(fw);
+            for (String data : jsonList) {
+                bw.write(data);
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            log.error("IOException occurred when writing to file: " + e.getMessage(), e);
+        } finally {
+            try {
+                if (bw != null) {
+                    bw.close();
+                }
+            } catch (IOException e) {
+                log.error("Error while closing stream: " + e.getMessage(), e);
+            }
+        }
+    }
 }

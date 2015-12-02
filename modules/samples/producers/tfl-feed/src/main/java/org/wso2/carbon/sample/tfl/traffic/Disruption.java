@@ -14,33 +14,27 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.Traffic;
+package org.wso2.carbon.sample.tfl.traffic;
 
 import com.vividsolutions.jts.algorithm.ConvexHull;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Polygon;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-/**
- * Created by sanka on 2/6/15.
- */
 public class Disruption {
-    String id;
-    String state;
-    String severity;
-    String location;
-    String comments;
-    String coordinates = null;
-    public static GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
+    private String id;
+    private String state;
+    private String severity;
+    private String location;
+    private String comments;
+    private String coordinates = null;
 
+    public static GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
     public boolean isMultiPolygon = true;
-    final static double tolerance = 0.0005;
-    ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
+    public final static double tolerance = 0.0005;
+    private ArrayList<Coordinate> coords = new ArrayList<Coordinate>();
 
     public Disruption() {
 
@@ -56,26 +50,26 @@ public class Disruption {
     public void setCoordsPoly(String coords) {
         isMultiPolygon = false;
         StringBuilder sb = new StringBuilder();
-        if(coords != null){
+        if (coords != null) {
             String[] temp = coords.split(",");
-            sb.append("{ \n 'type': 'Polygon', \n 'coordinates': [[");
+            sb.append("{ 'type': 'Polygon',  'coordinates': [[");
             for (int i = 0; i < temp.length - 1; i += 2) {
                 if (i != 0) {
                     sb.append(",");
                 }
                 sb.append("[").append(Double.parseDouble(temp[i])).append(",").append(Double.parseDouble(temp[i + 1])).append("]");
             }
-            sb.append("]] \n }");
-        }else{
-            sb.append("{ \n 'type': 'Polygon', \n 'coordinates': [] \n }");
+            sb.append("]]  }");
+        } else {
+            sb.append("{  'type': 'Polygon',  'coordinates': []  }");
         }
         coordinates = sb.toString();
     }
 
     public void setCoordsPoly(Coordinate[] coords) {
         StringBuilder sb = new StringBuilder();
-        if(coords.length != 0){
-            sb.append("{ \n 'type': 'Polygon', \n 'coordinates': [[");
+        if (coords.length != 0) {
+            sb.append("{  'type': 'Polygon',  'coordinates': [[");
 
             for (int i = 0; i < coords.length; i++) {
                 if (i != 0) {
@@ -83,9 +77,9 @@ public class Disruption {
                 }
                 sb.append("[").append(coords[i].x).append(",").append(coords[i].y).append("]");
             }
-            sb.append("]] \n }");
-        } else{
-            sb.append("{ \n 'type': 'Polygon', \n 'coordinates': [] \n }");
+            sb.append("]]  }");
+        } else {
+            sb.append("{  'type': 'Polygon',  'coordinates': []  }");
         }
         coordinates = sb.toString();
     }
@@ -116,71 +110,77 @@ public class Disruption {
         }
     }
 
-    /*
-        public void addCoordsLane(String coords) {
-
-        }
-    */
     public void end() {
-        if (isMultiPolygon) {/*
-            ArrayList<Polygon> polygons = new ArrayList<>();
-            StringBuilder sb = new StringBuilder("{ \n 'type': 'MultiPolygon', \n 'coordinates': [");
-            for(int i=0; i <coords.size();i+=4) {
-                if(i!=0) {
-                    sb.append(",");
-                }
-                sb.append("[[");
-                for(int j=i;j<i+4;j++) {
-                    if(j!=i)
-                        sb.append(",");
-                    sb.append("[").append(coords.get(i).x).append(",").append(coords.get(i).y).append("]");
-                }
-                sb.append("]]");
-            }
-            sb.append("] \n }");
-            coordinates = sb.toString();*/
-
+        if (isMultiPolygon) {
             Coordinate[] c = new Coordinate[coords.size()];
             c = coords.toArray(c);
             GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
             ConvexHull ch = new ConvexHull(c, geometryFactory);
-            //System.out.println(ch.getConvexHull().toString());
             setCoordsPoly(ch.getConvexHull().getCoordinates());
-
         }
 
     }
 
     @Override
     public String toString() {
-        return "{'id': "+id+", \n"
-                +"'properties': { \n"
-                +" 'timeStamp': "+System.currentTimeMillis()+", \n"
-                +" 'state': '"+severity+"', \n"
-                +" 'information': "+"'Location- "+location+" Comments- "+comments+"'"+"\n"
-                +" }, \n"
-                +"'geometry' : "+coordinates+"\n}";
+        return "{'id': " + id + ", \n"
+                + "'properties': { \n"
+                + " 'timeStamp': " + System.currentTimeMillis() + ", \n"
+                + " 'state': '" + severity + "', \n"
+                + " 'information': " + "'Location- " + location + " Comments- " + comments + "'" + "\n"
+                + " }, \n"
+                + "'geometry' : " + coordinates + "\n}";
     }
 
+    public String toJson() {
+        return "{'id': " + id + ", "
+                + "'properties': { "
+                + " 'timeStamp': " + System.currentTimeMillis() + ", "
+                + " 'state': '" + severity + "', "
+                + " 'information': " + "'Location- " + location + " Comments- " + comments + "'"
+                + " }, "
+                + "'geometry' : " + coordinates + "}";
+    }
+
+    public String getCsvHeader() {
+        return "id, timestamp, state, location, comments, coordinates";
+    }
+
+    public String toCsv() {
+        return id + ", " + System.currentTimeMillis() + ", " + severity + ", " + location + ", "
+                + comments + ", " + coordinates;
+    }
 
     public void setComments(String comments) {
-        this.comments = comments.replaceAll("'", "").replaceAll("\"","");
+        this.comments = comments.replaceAll("'", "").replaceAll("\"", "");
     }
 
     public void setLocation(String location) {
-        this.location = location.replaceAll("'", "").replaceAll("\"","");
+        this.location = location.replaceAll("'", "").replaceAll("\"", "");
     }
 
     public void setState(String state) {
         this.state = state;
     }
 
+    public String getState() {
+        return state;
+    }
+
     public void setSeverity(String severity) {
         this.severity = severity;
     }
 
-    public String getState() {
-        return state;
+    public String getSeverity() {
+        return severity;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
     }
 
 }

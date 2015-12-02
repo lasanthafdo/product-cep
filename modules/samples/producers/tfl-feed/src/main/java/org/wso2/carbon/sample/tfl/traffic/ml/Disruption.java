@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package org.wso2.carbon.sample.tfl.Traffic.ML;
+package org.wso2.carbon.sample.tfl.traffic.ml;
 
-import com.vividsolutions.jts.algorithm.ConvexHull;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;

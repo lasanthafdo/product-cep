@@ -43,6 +43,7 @@
         <module>http-performance</module>
         <module>kafka-performance</module>
         <module>jms-performance</module>
+        <module>tfl-feed</module>
     </modules>
 
 </project>

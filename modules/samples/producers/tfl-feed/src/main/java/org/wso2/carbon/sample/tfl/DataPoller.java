@@ -16,6 +16,7 @@
 
 package org.wso2.carbon.sample.tfl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -40,10 +41,12 @@ public class DataPoller extends Thread {
     public static final String recordedBusURL = "http://localhost/TFL/data";
 
     public static final String liveTrafficURL = "https://data.tfl.gov.uk/tfl/syndication/feeds/tims_feed.xml";
-    public static final String liveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=29,25,38&ReturnList=StopID,Latitude,Longitude";
-    public static final String liveBusURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=29,25,38&ReturnList=StopID,LineID,VehicleID,EstimatedTime";
-    public static final String stopPointURL = "https://api.tfl.gov.uk/Line/29/StopPoints";
-    public static final String timeTableURL = "https://api.tfl.gov.uk/Line/29/Timetable/";
+    public static final String liveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopID,Latitude,Longitude";
+    public static final String liveBusURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopID,LineID,VehicleID,EstimatedTime";
+    public static final String stopPointURL = "https://api.tfl.gov.uk/Line/%s/StopPoints";
+    public static final String timeTableURL = "https://api.tfl.gov.uk/Line/%s/Timetable/";
+
+    public static final String[] busLineIds = new String[]{"29", "25", "38"};
 
 
     public static String trafficURL;
@@ -64,44 +67,9 @@ public class DataPoller extends Thread {
             busStopURL = recordedBusStopURL;
         } else {
             trafficURL = liveTrafficURL;
-            busURL = liveBusURL;
-            busStopURL = liveBusStopURL;
+            busURL = String.format(liveBusURL, StringUtils.join(busLineIds, ','));
+            busStopURL = String.format(liveBusStopURL, StringUtils.join(busLineIds, ','));
         }
-    }
-
-    public void run() {
-
-        if (isBus) {
-            getTimetables();
-            getStops();
-            getBus();
-        } else {
-            getDisruptions();
-        }
-
-    }
-
-    private void getBus() {
-        BusStream b;
-        long time = System.currentTimeMillis();
-        int i = 0;
-        while (true) {
-            String url = busURL;
-            if (busURL.contains("localhost"))
-                url += i + ".txt";
-            log.info(url);
-            b = new BusStream(url);
-            b.start();
-            try {
-                time += 30000;
-                Thread.sleep(time - System.currentTimeMillis());
-            } catch (InterruptedException e) {
-                //ignore
-            }
-
-            i = (i + 1) % 100;
-        }
-
     }
 
     private static void getDisruptions() {
@@ -126,71 +94,69 @@ public class DataPoller extends Thread {
         HttpURLConnection con = null;
         BufferedReader in = null;
         try {
-            String[] arr;
+            for (String lineId : busLineIds) {
+                URL obj = new URL(String.format(stopPointURL, lineId));
+                con = (HttpURLConnection) obj.openConnection();
 
-            URL obj = new URL(stopPointURL);
-            con = (HttpURLConnection) obj.openConnection();
+                // optional default is GET
+                con.setRequestMethod("GET");
 
-            // optional default is GET
-            con.setRequestMethod("GET");
+                int responseCode = con.getResponseCode();
+                log.info("Sending 'GET' request to URL : " + String.format(stopPointURL, lineId));
+                log.info("Response Code : " + responseCode);
 
-            int responseCode = con.getResponseCode();
-            log.info("Sending 'GET' request to URL : " + stopPointURL);
-            log.info("Response Code : " + responseCode);
+                in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
 
-            in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
+                long time = System.currentTimeMillis();
+                inputLine = in.readLine();
+                JSONArray jsonArray = new JSONArray(inputLine);
+                List<String> csvTimetableList = new ArrayList<>();
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject stopPoint = jsonArray.getJSONObject(i);
+                    String naptanId = (String) stopPoint.get("naptanId");
+                    Double latitude = (Double) stopPoint.get("lat");
+                    Double longitude = (Double) stopPoint.get("lon");
+                    URL ttUrl = new URL(String.format(timeTableURL, lineId) + naptanId);
+                    BufferedReader ttBufferedReader = null;
+                    HttpURLConnection ttUrlConnection = null;
+                    try {
+                        ttUrlConnection = (HttpURLConnection) ttUrl.openConnection();
+                        // optional default is GET
+                        ttUrlConnection.setRequestMethod("GET");
 
-            long time = System.currentTimeMillis();
-            inputLine = in.readLine();
-            JSONArray jsonArray = new JSONArray(inputLine);
-            List<String> csvTimetableList = new ArrayList<>();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject stopPoint = jsonArray.getJSONObject(i);
-                String naptanId = (String) stopPoint.get("naptanId");
-                Double latitude = (Double) stopPoint.get("lat");
-                Double longitude = (Double) stopPoint.get("lon");
-                URL ttUrl = new URL(timeTableURL + naptanId);
-                BufferedReader ttBufferedReader = null;
-                HttpURLConnection ttUrlConnection = null;
-                try {
-                    ttUrlConnection = (HttpURLConnection) ttUrl.openConnection();
+                        int ttResponseCode = ttUrlConnection.getResponseCode();
+                        log.info("\nSending 'GET' request to URL : " + ttUrl);
+                        log.info("Response Code : " + ttResponseCode);
 
-                    // optional default is GET
-                    ttUrlConnection.setRequestMethod("GET");
+                        ttBufferedReader = new BufferedReader(new InputStreamReader(ttUrlConnection.getInputStream()));
+                        String ttInputLine;
 
-                    int ttResponseCode = ttUrlConnection.getResponseCode();
-                    log.info("\nSending 'GET' request to URL : " + ttUrl);
-                    log.info("Response Code : " + ttResponseCode);
-
-                    ttBufferedReader = new BufferedReader(new InputStreamReader(ttUrlConnection.getInputStream()));
-                    String ttInputLine;
-
-                    long timetableTime = System.currentTimeMillis();
-                    while ((ttInputLine = ttBufferedReader.readLine()) != null) {
-                        JSONObject timetableObj = new JSONObject(ttInputLine);
-                        JSONObject schedulesObj = (JSONObject) ((JSONArray) ((JSONObject) timetableObj.get("timetable")).get("routes")).get(0);
-                        JSONArray timetableArray = (JSONArray) ((JSONObject) ((JSONArray) schedulesObj.get("schedules")).get(1)).get("knownJourneys");
-                        for (int j = 0; j < timetableArray.length(); j++) {
-                            JSONObject timetableInfoObj = (JSONObject) timetableArray.get(j);
-                            TimetableInfo timetableInfo = new TimetableInfo(naptanId, latitude, longitude,
-                                    Integer.valueOf((String) timetableInfoObj.get("hour")),
-                                    Integer.valueOf((String) timetableInfoObj.get("minute")), "Friday");
-                            csvTimetableList.add(timetableInfo.toCsv());
+                        while ((ttInputLine = ttBufferedReader.readLine()) != null) {
+                            JSONObject timetableObj = new JSONObject(ttInputLine);
+                            JSONObject schedulesObj = (JSONObject) ((JSONArray) ((JSONObject) timetableObj.get("timetable")).get("routes")).get(0);
+                            JSONArray timetableArray = (JSONArray) ((JSONObject) ((JSONArray) schedulesObj.get("schedules")).get(1)).get("knownJourneys");
+                            for (int j = 0; j < timetableArray.length(); j++) {
+                                JSONObject timetableInfoObj = (JSONObject) timetableArray.get(j);
+                                TimetableInfo timetableInfo = new TimetableInfo(naptanId, latitude, longitude,
+                                        Integer.valueOf((String) timetableInfoObj.get("hour")),
+                                        Integer.valueOf((String) timetableInfoObj.get("minute")), "Monday");
+                                csvTimetableList.add(timetableInfo.toCsv());
+                            }
+                        }
+                    } catch (IOException e) {
+                        log.error("IOException while reading time table data for URL: " + ttUrl, e);
+                    } finally {
+                        if (ttUrlConnection != null) {
+                            ttUrlConnection.disconnect();
+                        }
+                        if (ttBufferedReader != null) {
+                            ttBufferedReader.close();
                         }
                     }
-                } catch (IOException e) {
-                    log.error("IOException while reading time table data for URL: " + ttUrl, e);
-                } finally {
-                    if (ttUrlConnection != null) {
-                        ttUrlConnection.disconnect();
-                    }
-                    if (ttBufferedReader != null) {
-                        ttBufferedReader.close();
-                    }
                 }
+                TflStream.writeToFile("tfl-timetable-data.out", csvTimetableList, true);
             }
-            TflStream.writeToFile("tfl-timetable-data.out", csvTimetableList, true);
         } catch (IOException e) {
             log.error("IOException while reading time table data: " + e.getMessage(), e);
         } finally {
@@ -256,6 +222,41 @@ public class DataPoller extends Thread {
                 log.error("Error while closing stream: " + e.getMessage(), e);
             }
         }
+    }
+
+    public void run() {
+
+        if (isBus) {
+            getTimetables();
+            getStops();
+            getBus();
+        } else {
+            getDisruptions();
+        }
+
+    }
+
+    private void getBus() {
+        BusStream b;
+        long time = System.currentTimeMillis();
+        int i = 0;
+        while (true) {
+            String url = busURL;
+            if (busURL.contains("localhost"))
+                url += i + ".txt";
+            log.info(url);
+            b = new BusStream(url);
+            b.start();
+            try {
+                time += 30000;
+                Thread.sleep(time - System.currentTimeMillis());
+            } catch (InterruptedException e) {
+                //ignore
+            }
+
+            i = (i + 1) % 100;
+        }
+
     }
 
 

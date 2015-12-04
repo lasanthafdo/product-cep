@@ -61,7 +61,7 @@ public class TflStream {
             BusInfoUpdater busInfoUpdater = new BusInfoUpdater(System.currentTimeMillis(), 5000, endPointBus);
             DataPoller busData = new DataPoller(true, playback);
             DataPoller trafficData = new DataPoller(false, playback);
-            //trafficData.start();
+            // trafficData.start();
             busData.start();
             System.out.println("Started getting data");
             Thread.sleep(30000);

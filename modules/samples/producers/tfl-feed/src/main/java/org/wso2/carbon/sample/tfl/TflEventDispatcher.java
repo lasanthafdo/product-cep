@@ -42,12 +42,16 @@ public class TflEventDispatcher {
         EventDispatcher trafficDisruptionData = new EventDispatcher(
                 "http://localhost:9763/endpoints/GpsDataOverHttpTrafficStream", "tfl-traffic-data.out", 1000);
         EventDispatcher busTrafficData = new EventDispatcher(
-                "http://localhost:9763/endpoints/BusTrafficCsvReceiver", "tfl-bus-data.out", 200);
-        EventDispatcher busStopData = new EventDispatcher("http://localhost:9763/endpoints/BusTrafficCsvReceiver", "tfl-bus-stop-data.out", 5000);
+                "http://localhost:9763/endpoints/BusTrafficCsvReceiver", "tfl-bus-data.out", 100);
+        EventDispatcher busStopData = new EventDispatcher(
+                "http://localhost:9763/endpoints/BusTrafficCsvReceiver", "tfl-bus-stop-data.out", 100);
+        EventDispatcher timeTableData = new EventDispatcher(
+                "http://localhost:9763/endpoints/TimeTableCsvReceiver", "tfl-timetable-data.out", 100);
         ExecutorService executorService = Executors.newFixedThreadPool(5);
         executorService.submit(trafficDisruptionData);
         executorService.submit(busTrafficData);
         executorService.submit(busStopData);
+        executorService.submit(timeTableData);
     }
 
     private static class EventDispatcher implements Runnable {
@@ -115,5 +119,4 @@ public class TflEventDispatcher {
 
         }
     }
-
 }

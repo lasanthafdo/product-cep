@@ -18,14 +18,18 @@ package org.wso2.carbon.sample.tfl.busstop;
 
 public class TimetableInfo {
     private String id;
-    private double longitude;
+    private int direction;
+    private long timeStamp;
     private double latitude;
+    private double longitude;
     private int hour;
     private int min;
     private String day;
 
-    public TimetableInfo(String stopID, double lat, double lon, int hour, int min, String day) {
+    public TimetableInfo(String stopID, int direction, double lat, double lon, int hour, int min, String day) {
         this.id = stopID;
+        this.direction = direction;
+        this.timeStamp = System.currentTimeMillis();
         this.latitude = lat;
         this.longitude = lon;
         this.hour = hour;
@@ -35,13 +39,14 @@ public class TimetableInfo {
 
     @Override
     public String toString() {
-        return "{'id':'" + id + "','timeStamp':" + System.currentTimeMillis() +
-                ", 'lattitude': " + latitude + ",'longitude': " + longitude +
-                ", 'type' : 'STOP', 'speed' :" + 0 + ", 'angle':" + 0 + "}";
+        return "{'id':'" + id + "','direction':" + direction + "','timeStamp':" + timeStamp +
+                ", 'latitude': " + latitude + ",'longitude': " + longitude +
+                ", 'type' : 'TIMETABLE', 't_day' : " + day + ", 't_hour' : " + hour +
+                ", 't_minute':" + min + "}";
     }
 
     public String toCsv() {
-        return id + "," + System.currentTimeMillis() + "," + latitude + "," + longitude
-                + ",STOP" + "," + day + "," + hour + "," + min;
+        return id + "," + direction + "," + timeStamp + "," + latitude + "," + longitude
+                + ",TIMETABLE" + "," + day + "," + hour + "," + min;
     }
 }

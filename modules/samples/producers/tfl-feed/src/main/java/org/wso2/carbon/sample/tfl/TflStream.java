@@ -20,36 +20,25 @@ package org.wso2.carbon.sample.tfl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.wso2.carbon.sample.tfl.bus.Bus;
 import org.wso2.carbon.sample.tfl.busstop.BusStop;
-import org.wso2.carbon.sample.tfl.busstop.StopPoint;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class TflStream {
+    public static final String endPointBus = "http://localhost:9763/endpoints/GpsDataOverHttpSpatialObjectStream";
     public static HashMap<String, BusStop> map = new HashMap<String, BusStop>();
-    public static HashMap<String, StopPoint> stopMap = new HashMap<String, StopPoint>();
-
     public static ConcurrentHashMap<String, Bus> buses = new ConcurrentHashMap<String, Bus>();
     public static long timeOffset;
     public static long lastTime = 0;
-    public static final String endPointBus = "http://localhost:9763/endpoints/GpsDataOverHttpSpatialObjectStream";
-    public static final String endPointTraffic = "http://localhost:9763/endpoints/GpsDataOverHttpTrafficStream";
-
     private static Log log = LogFactory.getLog(TflStream.class);
 
     public static void main(String[] args) throws XMLStreamException {
@@ -60,29 +49,14 @@ public class TflStream {
         try {
             BusInfoUpdater busInfoUpdater = new BusInfoUpdater(System.currentTimeMillis(), 5000, endPointBus);
             DataPoller busData = new DataPoller(true, playback);
-            DataPoller trafficData = new DataPoller(false, playback);
+            // DataPoller trafficData = new DataPoller(false, playback);
             // trafficData.start();
             busData.start();
             System.out.println("Started getting data");
             Thread.sleep(30000);
             busInfoUpdater.start();
-
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    public static void send(ArrayList<String> jsonList, String endPoint) {
-        for (String data : jsonList) {
-            HttpClient client = new DefaultHttpClient();
-            HttpPost post = new HttpPost(endPoint);
-            try {
-                StringEntity entity = new StringEntity(data);
-                post.setEntity(entity);
-                HttpResponse response = client.execute(post);
-            } catch (IOException e) {
-                log.error("IOException when sending via HTTP: " + e.getMessage(), e);
-            }
         }
     }
 

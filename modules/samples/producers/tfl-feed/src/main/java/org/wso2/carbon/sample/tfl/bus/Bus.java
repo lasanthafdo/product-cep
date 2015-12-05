@@ -24,6 +24,9 @@ import java.util.PriorityQueue;
 
 public class Bus {
     String id;
+    String name;
+    int direction;
+    long timeStamp;
     double longitude = 0;
     double latitude = 0;
     double speed = 0.0;
@@ -32,17 +35,20 @@ public class Bus {
     PriorityQueue<Prediction> predictions;
     HashMap<BusStop, Prediction> predictionsMap;
 
-    public Bus(String id) {
+    public Bus(String id, String name, int direction) {
         this.id = id;
+        this.name = name;
+        this.direction = direction;
+        timeStamp = System.currentTimeMillis();
         predictions = new PriorityQueue<Prediction>();
         predictionsMap = new HashMap<BusStop, Prediction>();
     }
 
-    public void setData(BusStop bt, long time) {
-        Prediction p = predictionsMap.get(bt);
+    public void setData(BusStop bs, long time) {
+        Prediction p = predictionsMap.get(bs);
         if (p == null) {
-            p = new Prediction(bt, time + TflStream.timeOffset);
-            predictionsMap.put(bt, p);
+            p = new Prediction(bs, time + TflStream.timeOffset);
+            predictionsMap.put(bs, p);
             predictions.add(p);
         } else {
             p.time = time + TflStream.timeOffset;
@@ -93,28 +99,22 @@ public class Bus {
 
         angle = Math.atan2(newLongitude - longitude, newLatitude - latitude) * 180 / Math.PI;
         speed = Math.sqrt(Math.pow(newLatitude - latitude, 2) + Math.pow(newLongitude - longitude, 2)) * 110 * 1000 * 60 * 60 / period;
-
-
         latitude = newLatitude;
         longitude = newLongitude;
-
+        timeStamp = System.currentTimeMillis();
         return this.toString();
     }
 
     @Override
     public String toString() {
-        return "{'id':'" + id + "','timeStamp':" + System.currentTimeMillis() +
-                ", 'lattitude': " + latitude + ",'longitude': " + longitude +
-                ", 'type' : 'VEHICLE'" + ", 'speed' :" + speed + ", 'angle':" + angle + "}";
-    }
-
-    public String getCsvHeader() {
-        return "id, timestamp, latitude, longitude, type, speed, angle";
+        return "{'id':'" + id + "','name': '"+ name + "','direction':" + direction +
+                "','timeStamp':" + timeStamp + ", 'latitude': " + latitude +
+                ",'longitude': " + longitude + ", 'type' : 'VEHICLE', 'speed' :" + speed +
+                ", 'angle':" + angle + "}";
     }
 
     public String toCsv() {
-        return id + "," + System.currentTimeMillis() +
-                "," + latitude + "," + longitude +
-                ",VEHICLE," + speed + "," + angle;
+        return id + "," + name + "," + direction + "," + timeStamp +
+                "," + latitude + "," + longitude + ",VEHICLE" + "," + speed + "," + angle;
     }
 }

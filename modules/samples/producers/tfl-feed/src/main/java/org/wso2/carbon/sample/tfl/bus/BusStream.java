@@ -41,8 +41,6 @@ public class BusStream extends Thread {
             long time = System.currentTimeMillis();
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-            // optional default is GET
             con.setRequestMethod("GET");
 
             int responseCode = con.getResponseCode();
@@ -61,25 +59,23 @@ public class BusStream extends Thread {
             while ((inputLine = in.readLine()) != null) {
                 inputLine = inputLine.replaceAll("[\\[\\]\"]", "");
                 arr = inputLine.split(",");
-
-                Bus bus = TflStream.buses.get(arr[3]);
+                Bus bus = TflStream.buses.get(arr[4]);
                 BusStop bs = TflStream.map.get(arr[1]);
                 if (bs == null) {
                     continue;
                 }
                 if (bus == null) {
-                    bus = new Bus(arr[3]);
-                    TflStream.buses.put(arr[3], bus);
+                    bus = new Bus(arr[4], arr[5], Integer.parseInt(arr[3]));
+                    TflStream.buses.put(arr[4], bus);
                     newBuses.add(bus);
                 }
-                bus.setData(bs, Long.parseLong(arr[4]));
+                bus.setData(bs, Long.parseLong(arr[6]));
             }
             for (Bus newBus : newBuses) {
                 newBus.setNew();
             }
-
             in.close();
-            log.info("Added buses to a hashmap. " + (System.currentTimeMillis() - time) + " millis");
+            log.info("Added buses to a List. " + (System.currentTimeMillis() - time) + " millis");
         } catch (Exception e) {
             log.error("Error occurred while getting bus data: " + e.getMessage(), e);
         }

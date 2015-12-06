@@ -141,6 +141,8 @@ public class DataPoller extends Thread {
                     }
                 } catch (FileNotFoundException e) {
                     log.error("FileNotFoundException while reading time table data for URL: " + ttUrl, e);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    log.error("ArrayIndexOutOfBoundsException while reading time table data for URL: " + ttUrl, e);
                 } catch (IOException e) {
                     log.error("IOException while reading time table data for URL: " + ttUrl, e);
                 } finally {
@@ -155,6 +157,8 @@ public class DataPoller extends Thread {
             TflStream.writeToFile("tfl-timetable-data.out", csvTimetableList, true);
         } catch (IOException e) {
             log.error("IOException while reading time table data: " + e.getMessage(), e);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            log.error("ArrayIndexOutOfBoundsException while reading time table data: " + e.getMessage(), e);
         } finally {
             try {
                 if (in != null) {

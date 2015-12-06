@@ -225,8 +225,8 @@ public class DataPoller extends Thread {
     public void run() {
         if (isBus) {
             getTimetables();
-            getStops();
-            getBus();
+            // getStops();
+            // getBus();
         } else {
             getDisruptions();
         }

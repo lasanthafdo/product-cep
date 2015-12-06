@@ -43,7 +43,7 @@ public class DataPoller extends Thread {
     public static final String liveTrafficURL = "https://data.tfl.gov.uk/tfl/syndication/feeds/tims_feed.xml";
     public static final String liveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopPointName,StopID,Latitude,Longitude,DirectionID";
     public static final String liveBusURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopID,LineID,DirectionID,VehicleID,RegistrationNumber,EstimatedTime";
-    public static final String stopPointURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopID,StopCode2,Latitude,Longitude,LineID,DirectionID";
+    public static final String stopPointURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopPointName,StopID,StopCode2,Latitude,Longitude,LineID,DirectionID";
     public static final String timeTableURL = "https://api.tfl.gov.uk/Line/%s/Timetable/";
     public static final String[] busLineIds = new String[]{"29", "25", "38"};
     public static String trafficURL;
@@ -99,19 +99,20 @@ public class DataPoller extends Thread {
             in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             // first line is metadata, getting rid of that
             String inputLine = in.readLine();
-            String stopID, naptanId, lineId;
+            String stopName, stopID, naptanId, lineId;
             Double latitude, longitude;
             Integer directionId;
             String[] arr;
             while ((inputLine = in.readLine()) != null) {
                 inputLine = inputLine.replaceAll("[\\[\\]\"]", "");
                 arr = inputLine.split(",");
-                stopID = arr[1];
-                naptanId = arr[2];
-                latitude = Double.parseDouble(arr[3]);
-                longitude = Double.parseDouble(arr[4]);
-                lineId = arr[5];
-                directionId = Integer.parseInt(arr[6]);
+                stopName = arr[1];
+                stopID = arr[2];
+                naptanId = arr[3];
+                latitude = Double.parseDouble(arr[4]);
+                longitude = Double.parseDouble(arr[5]);
+                lineId = arr[6];
+                directionId = Integer.parseInt(arr[7]);
                 URL ttUrl = new URL(String.format(timeTableURL, lineId) + naptanId);
                 BufferedReader ttBufferedReader = null;
                 HttpURLConnection ttUrlConnection = null;
@@ -133,7 +134,7 @@ public class DataPoller extends Thread {
                                 schedulesObj.get("schedules")).get(1)).get("knownJourneys");
                         for (int j = 0; j < timetableArray.length(); j++) {
                             JSONObject timetableInfoObj = (JSONObject) timetableArray.get(j);
-                            TimetableInfo timetableInfo = new TimetableInfo(stopID, directionId, latitude, longitude,
+                            TimetableInfo timetableInfo = new TimetableInfo(stopID, stopName, directionId, latitude, longitude,
                                     Integer.valueOf((String) timetableInfoObj.get("hour")),
                                     Integer.valueOf((String) timetableInfoObj.get("minute")), "Monday");
                             csvTimetableList.add(timetableInfo.toCsv());

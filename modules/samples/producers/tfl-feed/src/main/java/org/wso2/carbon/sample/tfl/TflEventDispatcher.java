@@ -48,19 +48,18 @@ public class TflEventDispatcher {
         EventDispatcher timeTableData = new EventDispatcher(
                 "http://localhost:9763/endpoints/TimeTableCsvReceiver", "tfl-timetable-data.out", 100);
         ExecutorService executorService = Executors.newFixedThreadPool(5);
-        executorService.submit(trafficDisruptionData);
+        // executorService.submit(trafficDisruptionData);
         executorService.submit(busTrafficData);
         executorService.submit(busStopData);
         executorService.submit(timeTableData);
     }
 
     private static class EventDispatcher implements Runnable {
-
         private HttpClient client = null;
         private HttpPost post = null;
-        private String endPoint = "http://localhost:9763/endpoints/GpsDataOverHttpTrafficStream";
-        private String filename = "";
-        private long delayBetweenEvents = 1000;
+        private String endPoint;
+        private String filename;
+        private long delayBetweenEvents;
 
         public EventDispatcher(String endpoint, String filename, long delayBetweenEvents) {
             this.delayBetweenEvents = delayBetweenEvents;
@@ -116,7 +115,6 @@ public class TflEventDispatcher {
                     }
                 }
             }
-
         }
     }
 }

@@ -18,24 +18,30 @@ package org.wso2.carbon.sample.tfl.busstop;
 
 public class BusStop {
     public String id;
-    public double longitude;
+    public String name;
+    public int direction;
     public double latitude;
+    public double longitude;
+    long timeStamp;
 
-    public BusStop(String StopID, double lat, double lon) {
+    public BusStop(String StopID, String name, int direction, double lat, double lon) {
         this.id = StopID;
+        this.name = name.replaceAll(",", "-");
+        this.direction = direction;
+        timeStamp = System.currentTimeMillis();
         this.latitude = lat;
         this.longitude = lon;
     }
 
     @Override
     public String toString() {
-        return "{'id':'" + id + "','timeStamp':" + System.currentTimeMillis() +
-                ", 'lattitude': " + latitude + ",'longitude': " + longitude +
-                ", 'type' : 'STOP', 'speed' :" + 0 + ", 'angle':" + 0 + "}";
+        return "{'id':'" + id + "','name':" + name + "','direction':" + direction +
+                "','timeStamp':" + timeStamp + ", 'latitude': " + latitude +
+                ",'longitude': " + longitude + ", 'type' : 'STOP', 'speed' :" + 0 + ", 'angle':" + 0 + "}";
     }
 
     public String toCsv() {
-        return id + "," + System.currentTimeMillis() + "," + latitude + "," + longitude
-                + ",STOP" + "," + 0 + "," + 0;
+        return id + "," + name + "," + direction + "," + timeStamp +
+                "," + latitude + "," + longitude + ",STOP" + "," + 0 + "," + 0;
     }
 }

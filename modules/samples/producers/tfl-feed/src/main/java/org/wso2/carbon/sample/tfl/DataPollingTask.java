@@ -29,13 +29,9 @@ import java.util.ArrayList;
 public class DataPollingTask implements Runnable {
 
     public static final String recordedStreamURL = "http://localhost/TFL/tims_feed.xml";
-
     public static final String liveStreamURL = "https://data.tfl.gov.uk/tfl/syndication/feeds/tims_feed.xml";
-
     public static String streamURL;
-
     private static Log log = LogFactory.getLog(DataPollingTask.class);
-
     private boolean isRunning = true;
     private String streamName;
 
@@ -58,12 +54,8 @@ public class DataPollingTask implements Runnable {
         HttpURLConnection con = null;
         BufferedReader in = null;
         try {
-            String[] arr;
-
             URL obj = new URL(streamURL);
             con = (HttpURLConnection) obj.openConnection();
-
-            // optional; default is GET
             con.setRequestMethod("GET");
 
             int responseCode = con.getResponseCode();
@@ -72,7 +64,6 @@ public class DataPollingTask implements Runnable {
 
             in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
-
             ArrayList<String> csvBusStopList = new ArrayList<String>();
             while ((inputLine = in.readLine()) != null) {
                 csvBusStopList.add(inputLine);
@@ -93,7 +84,5 @@ public class DataPollingTask implements Runnable {
             }
         }
     }
-
-
 }
 

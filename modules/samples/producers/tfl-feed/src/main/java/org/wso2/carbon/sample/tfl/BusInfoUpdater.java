@@ -49,20 +49,17 @@ public class BusInfoUpdater extends Thread {
                     }
                     currentTime += period;
                     TflStream.writeToFile("tfl-bus-data.out", jsonList, true);
-
                     long diff = currentTime - System.currentTimeMillis();
                     if (diff >= 0) {
                         Thread.sleep(diff);
                     } else {
                         currentTime = System.currentTimeMillis();
                     }
-
                 } else {
                     Thread.sleep(1000);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                //throw new RuntimeException("asd");
             }
         }
     }

@@ -40,9 +40,9 @@ public class DataPoller extends Thread {
     public static final String recordedTrafficURL = "http://localhost/TFL/tims_feed.xml";
     public static final String recordedBusURL = "http://localhost/TFL/data";
     public static final String liveTrafficURL = "https://data.tfl.gov.uk/tfl/syndication/feeds/tims_feed.xml";
-    public static final String liveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopPointName,StopID,Latitude,Longitude,DirectionID";
+    public static final String liveBusStopURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopPointName,StopID,StopPointType,Latitude,Longitude,DirectionID";
     public static final String liveBusURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopID,LineID,DirectionID,VehicleID,RegistrationNumber,EstimatedTime";
-    public static final String stopPointURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopPointName,StopID,StopCode2,Latitude,Longitude,LineID,DirectionID";
+    public static final String stopPointURL = "http://countdown.api.tfl.gov.uk/interfaces/ura/instant_V1?LineID=%s&ReturnList=StopPointName,StopID,StopCode2,StopPointType,Latitude,Longitude,LineID,DirectionID";
     public static final String timeTableURL = "https://api.tfl.gov.uk/Line/%s/Timetable/";
     public static final String[] busLineIds = new String[]{"29", "25", "38", "N29", "N25", "N38"};
     // only consider stop types of Bus Request, Bus Compulsory, Live Bus Stand & Bus Station
@@ -100,7 +100,7 @@ public class DataPoller extends Thread {
             // first line is metadata, getting rid of that
             String inputLine = in.readLine();
             Set<String> processed = new HashSet<>();
-            String stopName, stopID, naptanId, lineId;
+            String stopName, stopID, naptanId, stopPointType, lineId;
             Double latitude, longitude;
             Integer directionId;
             String[] arr;
@@ -110,12 +110,14 @@ public class DataPoller extends Thread {
                 stopName = arr[1];
                 stopID = arr[2];
                 naptanId = arr[3];
-                latitude = Double.parseDouble(arr[4]);
-                longitude = Double.parseDouble(arr[5]);
-                lineId = arr[6];
-                directionId = Integer.parseInt(arr[7]);
+                stopPointType = arr[4];
+                latitude = Double.parseDouble(arr[5]);
+                longitude = Double.parseDouble(arr[6]);
+                lineId = arr[7];
+                directionId = Integer.parseInt(arr[8]);
                 // ‘null’ value for ‘StopCode2’ (naptanId) means that the stop is a withdrawn
-                if (naptanId != null && !naptanId.isEmpty() && !"null".equals(naptanId) && !processed.contains(naptanId)) {
+                if (naptanId != null && !naptanId.isEmpty() && !"null".equals(naptanId)
+                        && !processed.contains(naptanId) && validStopTypes.contains(stopPointType)) {
                     processed.add(naptanId);
                     URL ttUrl = new URL(String.format(timeTableURL, lineId) + naptanId);
                     BufferedReader ttBufferedReader = null;
@@ -138,8 +140,8 @@ public class DataPoller extends Thread {
                                     schedulesObj.get("schedules")).get(1)).get("knownJourneys");
                             for (int j = 0; j < timetableArray.length(); j++) {
                                 JSONObject timetableInfoObj = (JSONObject) timetableArray.get(j);
-                                TimetableInfo timetableInfo = new TimetableInfo(stopID, stopName, directionId, latitude, longitude,
-                                        Integer.valueOf((String) timetableInfoObj.get("hour")),
+                                TimetableInfo timetableInfo = new TimetableInfo(stopID, stopName, directionId,
+                                        latitude, longitude, Integer.valueOf((String) timetableInfoObj.get("hour")),
                                         Integer.valueOf((String) timetableInfoObj.get("minute")), "Monday");
                                 csvTimetableList.add(timetableInfo.toCsv());
                             }
@@ -171,6 +173,8 @@ public class DataPoller extends Thread {
             log.error("IOException while reading time table data: " + e.getMessage(), e);
         } catch (ArrayIndexOutOfBoundsException e) {
             log.error("ArrayIndexOutOfBoundsException while reading time table data: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Exception while reading time table data: " + e.getMessage(), e);
         } finally {
             try {
                 if (in != null) {
@@ -210,8 +214,8 @@ public class DataPoller extends Thread {
             while ((inputLine = in.readLine()) != null) {
                 inputLine = inputLine.replaceAll("[\\[\\]\"]", "");
                 arr = inputLine.split(",");
-                if (!stops.contains(arr[2])) {
-                    BusStop busStop = new BusStop(arr[2], arr[1], Integer.parseInt(arr[5]), Double.parseDouble(arr[3]), Double.parseDouble(arr[4]));
+                if (!stops.contains(arr[2]) && validStopTypes.contains(arr[3])) {
+                    BusStop busStop = new BusStop(arr[2], arr[1], Integer.parseInt(arr[6]), Double.parseDouble(arr[4]), Double.parseDouble(arr[5]));
                     TflStream.map.put(arr[2], busStop);
                     csvBusStopList.add(busStop.toCsv());
                     stops.add(arr[2]);
@@ -220,6 +224,8 @@ public class DataPoller extends Thread {
             TflStream.writeToFile("tfl-bus-stop-data.out", csvBusStopList, false);
         } catch (IOException e) {
             log.error("IOException while reading bus stop data: " + e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("Exception while reading bus stop data: " + e.getMessage(), e);
         } finally {
             try {
                 if (in != null) {

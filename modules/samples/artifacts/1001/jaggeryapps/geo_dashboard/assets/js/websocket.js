@@ -77,9 +77,15 @@ SpatialObject.prototype.update = function (geoJSON) {
 
     this.information = geoJSON.properties.information;
     this.type = geoJSON.properties.type;
+    this.name = geoJSON.properties.name;
+    this.displayName = "";
 
     if (this.type == "STOP") {
-        this.information = "Bus Stop";
+        this.displayName = this.name + " Stop"
+    } else if (this.type == "VEHICLE") {
+        this.displayName = "Bus " + this.name
+    } else {
+        this.displayName = this.name;
     }
 
     if (geoJSON.properties.notify) {
@@ -135,6 +141,7 @@ SpatialObject.prototype.update = function (geoJSON) {
 
     // TODO: use general popup DOM
     this.popupTemplate.find('#objectId').html(this.id);
+    this.popupTemplate.find('#objectName').html(this.displayName);
     this.popupTemplate.find('#information').html(this.information);
 
     this.popupTemplate.find('#speed').html(Math.round(this.speed * 10) / 10);
@@ -247,8 +254,6 @@ SpatialObject.prototype.getSectionStyles = function (state) {
 };
 
 SpatialObject.prototype.stateIcon = function () {
-    // Performance of if-else, switch or map based conditioning http://stackoverflow.com/questions/8624939/performance-of-if-else-switch-or-map-based-conditioning
-
     if (this.type == "" || this.type == "VEHICLE") {
         switch (this.state) {
             case "NORMAL":
@@ -262,8 +267,14 @@ SpatialObject.prototype.stateIcon = function () {
             default:
                 return defaultIcon;
         }
-    }
-    else {
+    } else if (this.type == "STOP") {
+        switch (this.state) {
+            case "DELAYED":
+                return delayedStopIcon;
+            default:
+                return defaultStopIcon;
+        }
+    } else {
         var customUrl = 'assets/img/markers/' + this.type + '.png';
         var customIcon = L.icon({
             iconUrl: customUrl,
@@ -291,7 +302,7 @@ function processTrafficMessage(json) {
 
 function processAlertMessage(json) {
     //console.log(json);
-    if (json.state != "NORMAL" && json.state != "MINIMAL") {
+    if (json.state != "NORMAL" && json.state != "MINIMAL" && json.state != "ON TIME" && json.state != "DELAYED") {
         notifyAlert("Object ID: <span style='color: blue;cursor: pointer' onclick='focusOnSpatialObject(" + json.id + ")'>" + json.id + "</span> change state to: <span style='color: red'>" + json.state + "</span> Info : " + json.information);
     }
 }
@@ -395,8 +406,15 @@ var normalIcon = L.icon({
     iconAnchor: [+12, +12],
     popupAnchor: [-2, -5]
 });
-var stopIcon = L.icon({
-    iconUrl: ApplicationOptions.leaflet.iconUrls.stopIcon,
+var delayedStopIcon = L.icon({
+    iconUrl: ApplicationOptions.leaflet.iconUrls.delayedStopIcon,
+    shadowUrl: false,
+    iconSize: [20, 20],
+    iconAnchor: [+12, +12],
+    popupAnchor: [-2, -5]
+});
+var defaultStopIcon = L.icon({
+    iconUrl: ApplicationOptions.leaflet.iconUrls.normalStopIcon,
     shadowUrl: false,
     iconSize: [20, 20],
     iconAnchor: [+12, +12],

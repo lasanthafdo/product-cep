@@ -56,8 +56,8 @@ var ApplicationOptions = {
             warningIcon: 'assets/img/markers/arrow_warning.png',
             defaultIcon: 'assets/img/markers/default_icons/marker-icon.png',
             resizeIcon: 'assets/img/markers/resize.png',
-            stopIcon:  'assets/img/markers/stopIcon.png'
-
+            normalStopIcon:  'assets/img/markers/normalStopIcon.png',
+            delayedStopIcon:  'assets/img/markers/delayedStopIcon.png'
         }
     }
 };

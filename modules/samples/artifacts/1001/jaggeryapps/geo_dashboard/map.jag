@@ -762,11 +762,12 @@ var log = new Log();
 <div style="display: none">
     <div id="markerPopup" class="popover top">
         <div class="arrow"></div>
-        <h3 class="popover-title">ID <span id="objectId"></span></h3>
+        <h3 class="popover-title"><span id="objectName"></span></h3>
 
         <div class="popover-content">
+            ID : <span id="objectId"></span>
+            <hr />
             <h6>Information</h6>
-
             <p id="information" class="bg-primary" style="margin: 0px;padding: 0px;"></p>
             <h6>Speed<span class="label label-primary pull-right"><span id="speed"></span> km/h</span></h6>
             <h6>Heading<span id="heading" class="label label-primary pull-right"></span></h6>
@@ -776,11 +777,12 @@ var log = new Log();
 
     <div id="markerPopupStop" class="popover top">
         <div class="arrow"></div>
-        <h3 class="popover-title">ID <span id="objectId"></span></h3>
+        <h3 class="popover-title"><span id="objectName"></span></h3>
 
         <div class="popover-content">
+            ID : <span id="objectId"></span>
+            <hr />
             <h6>Information</h6>
-
             <p id="information" class="bg-primary" style="margin: 0px;padding: 0px;"></p>
         </div>
     </div>
